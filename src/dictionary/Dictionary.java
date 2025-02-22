@@ -8,8 +8,8 @@ import java.util.*;
 
 public class Dictionary implements Serializable {
 
-    private final InvertedIndex matrix = new InvertedIndex();
-    private final Indexer indexer = new Indexer();
+    private InvertedIndex matrix = new InvertedIndex();
+    private Indexer indexer = new Indexer();
 
     public void addFilesFromFolder(String folderName) {
         File folder = FileLoader.loadFolder(folderName);
@@ -45,24 +45,58 @@ public class Dictionary implements Serializable {
         return documents;
     }
 
-//    public Iterable<String> getTerms() {
-//        return dictionaryStructure.getTerms();
-//    }
-//
-//    public BigInteger getTermCount(String term) {
-//        return dictionaryStructure.getTermCount(term);
-//    }
-//
-//    public Iterable<Posting> getTermPostings(String term) {
-//        return dictionaryStructure.getTermPostings(term);
-//    }
-//
-//    public BigInteger getAllTermsCount() {
-//        return dictionaryStructure.getAllTermsCount();
-//    }
-//
-//    public long getUniqueTermsCount() {
-//        return dictionaryStructure.getUniqueTermsCount();
-//    }
+    public void serialize(String directory) {
+        try { serializeDirectory(directory);
+        } catch (IOException e) {
+            System.out.println("Something went wrong during serialization");
+        }
+    }
+
+    public static Dictionary deserialize(String directory) {
+        try { return deserializeDictionary(directory);
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("Something went wrong during deserialization"); }
+        return null;
+    }
+
+    public void writeToFile(String directory) {
+        try { writeDictionaryToFile(directory);
+        } catch (IOException e) { System.out.println("Something went wrong during writing file"); }
+    }
+
+    public static Dictionary loadFromFile(String directory) {
+        try { return loadDictionaryFromFile(directory);
+        } catch (IOException e) { System.out.println("Something went wrong during loading from file"); }
+        return null;
+    }
+
+    private void serializeDirectory(String directory) throws IOException {
+        FileOutputStream fos = new FileOutputStream(directory);
+        ObjectOutputStream oos = new ObjectOutputStream(fos);
+        oos.writeObject(this);
+        oos.close();
+    }
+
+    private static Dictionary deserializeDictionary(String directory) throws IOException, ClassNotFoundException {
+        FileInputStream fis = new FileInputStream(directory);
+        ObjectInputStream ois = new ObjectInputStream(fis);
+        return (dictionary.Dictionary) ois.readObject();
+    }
+
+    private void writeDictionaryToFile(String directory) throws IOException {
+        FileWriter fileWriter = new FileWriter(directory);
+        BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+        indexer.writeToFile(bufferedWriter);
+        matrix.writeToFile(bufferedWriter);
+    }
+
+    private static Dictionary loadDictionaryFromFile(String directory) throws IOException {
+        Dictionary dictionary = new Dictionary();
+        FileReader fileReader = new FileReader(directory);
+        BufferedReader bufferedReader = new BufferedReader(fileReader);
+        dictionary.indexer = Indexer.loadFromFile(bufferedReader);
+        dictionary.matrix = InvertedIndex.readFromFile(bufferedReader);
+        return dictionary;
+    }
 
 }

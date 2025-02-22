@@ -1,8 +1,11 @@
 package dictionary;
 
+import utils.BitSetUtils;
+
+import java.io.*;
 import java.util.*;
 
-public class IncidenceMatrix {
+public class IncidenceMatrix implements Serializable {
 
     private final Map<String, BitSet> incidenceMatrix = new HashMap<>();
 
@@ -48,6 +51,26 @@ public class IncidenceMatrix {
         }
         executeOperators(operators, operands);
         return getDocIDsFromBitSet(operands.pop());
+    }
+
+    public void writeToFile(BufferedWriter fileWriter) throws IOException {
+        fileWriter.write(incidenceMatrix.size() + "\n");
+        for (String term : incidenceMatrix.keySet()) {
+            BitSet bitSet = incidenceMatrix.get(term);
+            fileWriter.write(term + ":" + bitSet.toString() + "\n");
+        }
+    }
+
+    public static IncidenceMatrix readFromFile(BufferedReader fileReader) throws IOException {
+        IncidenceMatrix matrix = new IncidenceMatrix();
+        int termCount = Integer.parseInt(fileReader.readLine());
+        for (int i = 0; i < termCount; ++i) {
+            String[] termInfo = fileReader.readLine().split(":");
+            String term = termInfo[0];
+            BitSet termBitSet = BitSetUtils.toBitSet(termInfo[1]);
+            matrix.incidenceMatrix.put(term, termBitSet);
+        }
+        return matrix;
     }
 
     private void executeOperators(Stack<String> operators, Stack<BitSet> operands) {

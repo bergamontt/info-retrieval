@@ -1,11 +1,11 @@
 package dictionary;
 
-import java.io.File;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class Indexer {
+public class Indexer implements Serializable {
 
     private final List<File> files = new ArrayList<>();
     private final List<Integer> docIDs = new ArrayList<>();
@@ -22,4 +22,20 @@ public class Indexer {
         return files.get(index);
     }
 
+    public void writeToFile(BufferedWriter fileWriter) throws IOException {
+        fileWriter.write(files.size() + "\n");
+        for (int docID : docIDs)
+            fileWriter.write(getDocumentByID(docID).getPath() + "\n");
+    }
+
+    public static Indexer loadFromFile(BufferedReader fileReader) throws IOException {
+        Indexer indexer = new Indexer();
+        int filesCount = Integer.parseInt(fileReader.readLine());
+        for (int i = 0; i < filesCount; ++i) {
+            String filePath = fileReader.readLine();
+            File file = new File(filePath);
+            indexer.addFile(file);
+        }
+        return indexer;
+    }
 }

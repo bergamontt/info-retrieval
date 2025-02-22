@@ -1,8 +1,12 @@
 package dictionary;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.*;
 
-public class InvertedIndex {
+public class InvertedIndex implements Serializable {
 
     Map<String, List<Integer>> invertedIndex = new HashMap<>();
     private int fileCount = 0;
@@ -39,19 +43,44 @@ public class InvertedIndex {
                 executeOperators(operators, operands);
                 operators.push(token);
             } else if (token.equals("!"))
-               negate = true;
+                negate = true;
             else if (negate) {
                 List<Integer> negated = negate(invertedIndex.get(token));
                 operands.push(negated);
                 negate = false;
             }
             else {
-               operands.push(invertedIndex.get(token));
+                operands.push(invertedIndex.get(token));
             }
         }
 
         executeOperators(operators, operands);
         return operands.pop();
+    }
+
+    public void writeToFile(BufferedWriter fileWriter) throws IOException {
+        fileWriter.write(fileCount + "\n");
+        fileWriter.write(invertedIndex.size() + "\n");
+        for (String term : invertedIndex.keySet()) {
+            fileWriter.write(term + " ");
+            List<Integer> documents = invertedIndex.get(term);
+            for (int docID : documents)
+                fileWriter.write(docID + " ");
+        }
+    }
+
+    public static InvertedIndex readFromFile(BufferedReader fileReader) throws IOException {
+        InvertedIndex index = new InvertedIndex();
+        index.fileCount = Integer.parseInt(fileReader.readLine());
+        int termCount = Integer.parseInt(fileReader.readLine());
+        for (int i = 0; i < termCount; ++i) {
+            String[] termInfo = fileReader.readLine().split(" ");
+            List<Integer> docIDs = new ArrayList<>();
+            for (int j = 1; j < termInfo.length; ++j)
+                docIDs.add(Integer.parseInt(termInfo[j]));
+            index.invertedIndex.put(termInfo[0], docIDs);
+        }
+        return index;
     }
 
     private List<Integer> intersect(List<Integer> p1, List<Integer> p2) {

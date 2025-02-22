@@ -6,8 +6,10 @@ public class Main {
         // Dictionary dictionary = Dictionary.loadSerializedDictionary("src/dictionary/saved/");
         // Dictionary dictionary = Dictionary.loadDictionaryFromFile("src/dictionary/saved/");
 
-        Dictionary dictionary = new Dictionary();
-        dictionary.addFilesFromFolder("src/collection");
+        Dictionary dictionary = Dictionary.deserialize("src/dictionary/saved/dictionary.ser");
+        if (dictionary == null) return;
+//        Dictionary dictionary = new Dictionary();
+//        dictionary.addFilesFromFolder("src/collection");
         //dictionary.addFile("src/collection/cranford.txt");
 //        if (dictionary == null) return;
 
@@ -30,6 +32,9 @@ public class Main {
             System.out.println(document);
 
         System.out.println();
+
+        dictionary.serialize("src/dictionary/saved/dictionary.ser");
+
 
 //        for (String term : dictionary.getTerms()) {
 //           System.out.println(term + ": " + dictionary.getTermCount(term));
