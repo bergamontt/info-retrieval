@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 
-public class InvertedIndex implements Serializable {
+public class InvertedIndex implements Serializable, DictionaryDataStructure, BooleanRetrieval<List<Integer>> {
 
     Map<String, List<Integer>> invertedIndex = new HashMap<>();
     private int fileCount = 0;
@@ -29,33 +29,10 @@ public class InvertedIndex implements Serializable {
         return invertedIndex.get(term);
     }
 
+    @Override
     public Iterable<Integer> getDocIDsFromQuery(String query) {
-
-        String[] tokens = query.split(" ");
-        Stack<String> operators = new Stack<>();
-        Stack<List<Integer>> operands = new Stack<>();
-        boolean negate = false;
-
-        for (String token : tokens) {
-            if (token.equals("&"))
-                operators.push(token);
-            else if (token.equals("|")) {
-                executeOperators(operators, operands);
-                operators.push(token);
-            } else if (token.equals("!"))
-                negate = true;
-            else if (negate) {
-                List<Integer> negated = negate(invertedIndex.get(token));
-                operands.push(negated);
-                negate = false;
-            }
-            else {
-                operands.push(invertedIndex.get(token));
-            }
-        }
-
-        executeOperators(operators, operands);
-        return operands.pop();
+        QueryEngine<List<Integer>> queryEngine = new QueryEngine<>(this);
+        return queryEngine.getDocIDsFromQuery(query);
     }
 
     public void writeToFile(BufferedWriter fileWriter) throws IOException {
@@ -66,6 +43,7 @@ public class InvertedIndex implements Serializable {
             List<Integer> documents = invertedIndex.get(term);
             for (int docID : documents)
                 fileWriter.write(docID + " ");
+            fileWriter.write("\n");
         }
     }
 
@@ -83,7 +61,8 @@ public class InvertedIndex implements Serializable {
         return index;
     }
 
-    private List<Integer> intersect(List<Integer> p1, List<Integer> p2) {
+    @Override
+    public List<Integer> intersect(List<Integer> p1, List<Integer> p2) {
         List<Integer> result = new ArrayList<>();
         int i1 = 0, i2 = 0;
         while (i1 < p1.size() && i2 < p2.size()) {
@@ -98,7 +77,8 @@ public class InvertedIndex implements Serializable {
         return result;
     }
 
-    private List<Integer> negate(List<Integer> p1) {
+    @Override
+    public List<Integer> negate(List<Integer> p1) {
         List<Integer> result = new ArrayList<>();
         int lastDocID = -1;
         for (int docID : p1) {
@@ -111,7 +91,8 @@ public class InvertedIndex implements Serializable {
         return result;
     }
 
-    private List<Integer> concatenate(List<Integer> p1, List<Integer> p2) {
+    @Override
+    public List<Integer> concatenate(List<Integer> p1, List<Integer> p2) {
         List<Integer> result = new ArrayList<>();
         int i = 0, j = 0;
         while (i < p1.size() || j < p2.size()) {
@@ -125,19 +106,13 @@ public class InvertedIndex implements Serializable {
         return result;
     }
 
-    private void executeOperators(Stack<String> operators, Stack<List<Integer>> operands) {
-        List<Integer> smallest = removeSmallestInSize(operands);
-        while (!operators.isEmpty()) {
-            String operator = operators.pop();
-            List<Integer> operand = operands.pop();
-            if (operator.equals("&"))
-                smallest = intersect(smallest, operand);
-            else smallest = concatenate(smallest, operand);
-        }
-        operands.push(smallest);
+    @Override
+    public List<Integer> getTermRawDocIDs(String token) {
+        return invertedIndex.get(token);
     }
 
-    private List<Integer> removeSmallestInSize(Stack<List<Integer>> operands) {
+    @Override
+    public List<Integer> removeSmallestInSize(Stack<List<Integer>> operands) {
         List<Integer> smallest = operands.peek();
         for (List<Integer> operand : operands)
             if (smallest.size() > operand.size())

@@ -5,7 +5,7 @@ import utils.BitSetUtils;
 import java.io.*;
 import java.util.*;
 
-public class IncidenceMatrix implements Serializable {
+public class IncidenceMatrix implements Serializable, DictionaryDataStructure, BooleanRetrieval<BitSet> {
 
     private final Map<String, BitSet> incidenceMatrix = new HashMap<>();
 
@@ -27,30 +27,9 @@ public class IncidenceMatrix implements Serializable {
     }
 
     public Iterable<Integer> getDocIDsFromQuery(String query) {
-        String[] tokens = query.split(" ");
-        Stack<String> operators = new Stack<>();
-        Stack<BitSet> operands = new Stack<>();
-        boolean negate = false;
-        for (String token : tokens) {
-            if (token.equals("!"))
-                negate = true;
-            else if (token.equals("&"))
-                operators.push(token);
-            else if (token.equals("|")) {
-                executeOperators(operators, operands);
-                operators.push(token);
-            } else if (!negate)
-                operands.push(incidenceMatrix.get(token));
-            else {
-                BitSet bitSet = incidenceMatrix.get(token);
-                BitSet result = (BitSet) bitSet.clone();
-                result.flip(0, bitSet.length());
-                operands.push(result);
-                negate = false;
-            }
-        }
-        executeOperators(operators, operands);
-        return getDocIDsFromBitSet(operands.pop());
+        QueryEngine<BitSet> queryEngine = new QueryEngine<>(this);
+        BitSet result = queryEngine.getDocIDsFromQuery(query);
+        return getDocIDsFromBitSet(result);
     }
 
     public void writeToFile(BufferedWriter fileWriter) throws IOException {
@@ -73,19 +52,35 @@ public class IncidenceMatrix implements Serializable {
         return matrix;
     }
 
-    private void executeOperators(Stack<String> operators, Stack<BitSet> operands) {
-        while (!operators.empty()) {
-            String operator = operators.pop();
-            BitSet scdOperand = operands.pop();
-            BitSet fstOperand = operands.pop();
-            BitSet result = (BitSet)fstOperand.clone();
-            if (operator.equals("&")) {
-                result.and(scdOperand);
-            } else if (operator.equals("|"))
-                result.or(scdOperand);
-            else result.or(scdOperand);
-            operands.push(result);
-        }
+    @Override
+    public BitSet negate(BitSet operand) {
+        BitSet result = (BitSet) operand.clone();
+        result.flip(0, operand.length());
+        return result;
+    }
+
+    @Override
+    public BitSet intersect(BitSet operand1, BitSet operand2) {
+        BitSet result = (BitSet) operand1.clone();
+        result.and(operand2);
+        return result;
+    }
+
+    @Override
+    public BitSet concatenate(BitSet operand1, BitSet operand2) {
+        BitSet result = (BitSet) operand1.clone();
+        result.or(operand2);
+        return result;
+    }
+
+    @Override
+    public BitSet getTermRawDocIDs(String token) {
+        return incidenceMatrix.get(token);
+    }
+
+    @Override
+    public BitSet removeSmallestInSize(Stack<BitSet> operands) {
+        return operands.pop();
     }
 
     private Iterable<Integer> getDocIDsFromBitSet(BitSet bitSet) {

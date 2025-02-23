@@ -6,13 +6,14 @@ public class Main {
         // Dictionary dictionary = Dictionary.loadSerializedDictionary("src/dictionary/saved/");
         // Dictionary dictionary = Dictionary.loadDictionaryFromFile("src/dictionary/saved/");
 
-        Dictionary dictionary = Dictionary.deserialize("src/dictionary/saved/dictionary.ser");
-        if (dictionary == null) return;
-//        Dictionary dictionary = new Dictionary();
-//        dictionary.addFilesFromFolder("src/collection");
-        //dictionary.addFile("src/collection/cranford.txt");
-//        if (dictionary == null) return;
+        //Dictionary dictionary = Dictionary.deserialize("src/dictionary/saved/dictionary.ser");
 
+        //Dictionary dictionary = new Dictionary();
+        //dictionary.addFilesFromFolder("src/collection");
+        //dictionary.addFile("src/collection/cranford.txt");
+
+        Dictionary dictionary = Dictionary.loadFromFile("src/dictionary/saved/dictionary.dict", "MATRIX");
+        if (dictionary == null) return;
         for (String document : dictionary.documentsWithTerm("negative"))
             System.out.println(document);
 
@@ -33,7 +34,8 @@ public class Main {
 
         System.out.println();
 
-        dictionary.serialize("src/dictionary/saved/dictionary.ser");
+        //dictionary.serialize("src/dictionary/saved/dictionary.ser");
+        dictionary.writeToFile("src/dictionary/saved/dictionary.dict");
 
 
 //        for (String term : dictionary.getTerms()) {

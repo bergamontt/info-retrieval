@@ -8,7 +8,7 @@ import java.util.*;
 
 public class Dictionary implements Serializable {
 
-    private InvertedIndex matrix = new InvertedIndex();
+    private DictionaryDataStructure dataStructure = new IncidenceMatrix();
     private Indexer indexer = new Indexer();
 
     public void addFilesFromFolder(String folderName) {
@@ -16,7 +16,7 @@ public class Dictionary implements Serializable {
         for (File file : Objects.requireNonNull(folder.listFiles())) {
             int docID = indexer.addFile(file);
             TxtParser parser = new TxtParser(file);
-            matrix.addDocumentTerms(parser.getTerms(), docID);
+            dataStructure.addDocumentTerms(parser.getTerms(), docID);
         }
     }
 
@@ -24,12 +24,12 @@ public class Dictionary implements Serializable {
         File file = FileLoader.loadFile(fileName);
         int docID = indexer.addFile(file);
         TxtParser parser = new TxtParser(file);
-        matrix.addDocumentTerms(parser.getTerms(), docID);
+        dataStructure.addDocumentTerms(parser.getTerms(), docID);
     }
 
     public List<String> documentsWithTerm(String term) {
         List<String> documents = new ArrayList<>();
-        for (int docID : matrix.getDocIDsWithTerm(term)) {
+        for (int docID : dataStructure.getDocIDsWithTerm(term)) {
             File document = indexer.getDocumentByID(docID);
             documents.add(document.getName());
         }
@@ -38,7 +38,7 @@ public class Dictionary implements Serializable {
 
     public List<String> documentsFromQuery(String query) {
         List<String> documents = new ArrayList<>();
-        for (int docID : matrix.getDocIDsFromQuery(query)) {
+        for (int docID : dataStructure.getDocIDsFromQuery(query)) {
             File document = indexer.getDocumentByID(docID);
             documents.add(document.getName());
         }
@@ -64,8 +64,8 @@ public class Dictionary implements Serializable {
         } catch (IOException e) { System.out.println("Something went wrong during writing file"); }
     }
 
-    public static Dictionary loadFromFile(String directory) {
-        try { return loadDictionaryFromFile(directory);
+    public static Dictionary loadFromFile(String directory, String DSType) {
+        try { return loadDictionaryFromFile(directory, DSType);
         } catch (IOException e) { System.out.println("Something went wrong during loading from file"); }
         return null;
     }
@@ -87,16 +87,27 @@ public class Dictionary implements Serializable {
         FileWriter fileWriter = new FileWriter(directory);
         BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
         indexer.writeToFile(bufferedWriter);
-        matrix.writeToFile(bufferedWriter);
+        dataStructure.writeToFile(bufferedWriter);
+        bufferedWriter.close();
     }
 
-    private static Dictionary loadDictionaryFromFile(String directory) throws IOException {
+    private static Dictionary loadDictionaryFromFile(String directory, String DSType) throws IOException {
         Dictionary dictionary = new Dictionary();
         FileReader fileReader = new FileReader(directory);
         BufferedReader bufferedReader = new BufferedReader(fileReader);
         dictionary.indexer = Indexer.loadFromFile(bufferedReader);
-        dictionary.matrix = InvertedIndex.readFromFile(bufferedReader);
+        loadDataStructureFromFile(dictionary, bufferedReader, DSType);
+        bufferedReader.close();
         return dictionary;
+    }
+
+    private static void loadDataStructureFromFile(
+            Dictionary dictionary, BufferedReader bufferedReader, String DSType) throws IOException {
+        if (DSType.equals("INDEX"))
+            dictionary.dataStructure = InvertedIndex.readFromFile(bufferedReader);
+        else if (DSType.equals("MATRIX"))
+            dictionary.dataStructure = IncidenceMatrix.readFromFile(bufferedReader);
+        else throw new RuntimeException("No such data structure exists");
     }
 
 }
