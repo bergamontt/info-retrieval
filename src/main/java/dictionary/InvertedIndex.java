@@ -36,6 +36,7 @@ public class InvertedIndex implements Serializable, DictionaryDataStructure, Boo
     }
 
     public void writeToFile(BufferedWriter fileWriter) throws IOException {
+        fileWriter.write("index\n");
         fileWriter.write(fileCount + "\n");
         fileWriter.write(invertedIndex.size() + "\n");
         for (String term : invertedIndex.keySet()) {

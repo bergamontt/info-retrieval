@@ -33,6 +33,7 @@ public class IncidenceMatrix implements Serializable, DictionaryDataStructure, B
     }
 
     public void writeToFile(BufferedWriter fileWriter) throws IOException {
+        fileWriter.write("matrix\n");
         fileWriter.write(incidenceMatrix.size() + "\n");
         for (String term : incidenceMatrix.keySet()) {
             BitSet bitSet = incidenceMatrix.get(term);

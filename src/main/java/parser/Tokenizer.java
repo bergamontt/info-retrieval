@@ -1,5 +1,8 @@
 package parser;
 
+import opennlp.tools.stemmer.PorterStemmer;
+import utils.StemmerUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -13,14 +16,10 @@ public class Tokenizer {
         Matcher matcher = pattern.matcher(line);
         while (matcher.find()) {
             String token = matcher.group();
-            token = normalize(token);
+            token = StemmerUtils.stem(token);
             tokens.add(token);
         }
         return tokens;
-    }
-
-    private String normalize(String token) {
-        return token.toLowerCase();
     }
 
 }

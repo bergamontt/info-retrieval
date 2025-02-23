@@ -2,14 +2,21 @@ package dictionary;
 
 import parser.TxtParser;
 import utils.FileLoader;
+import utils.StemmerUtils;
 
 import java.io.*;
 import java.util.*;
 
 public class Dictionary implements Serializable {
 
-    private DictionaryDataStructure dataStructure = new IncidenceMatrix();
+    private DictionaryDataStructure dataStructure = new InvertedIndex();
     private Indexer indexer = new Indexer();
+
+    public Dictionary() {}
+
+    public Dictionary(DictionaryDataStructure dataStructure) {
+        this.dataStructure = dataStructure;
+    }
 
     public void addFilesFromFolder(String folderName) {
         File folder = FileLoader.loadFolder(folderName);
@@ -29,7 +36,8 @@ public class Dictionary implements Serializable {
 
     public List<String> documentsWithTerm(String term) {
         List<String> documents = new ArrayList<>();
-        for (int docID : dataStructure.getDocIDsWithTerm(term)) {
+        String normalizedTerm = StemmerUtils.stem(term);
+        for (int docID : dataStructure.getDocIDsWithTerm(normalizedTerm)) {
             File document = indexer.getDocumentByID(docID);
             documents.add(document.getName());
         }
@@ -64,8 +72,8 @@ public class Dictionary implements Serializable {
         } catch (IOException e) { System.out.println("Something went wrong during writing file"); }
     }
 
-    public static Dictionary loadFromFile(String directory, String DSType) {
-        try { return loadDictionaryFromFile(directory, DSType);
+    public static Dictionary loadFromFile(String directory) {
+        try { return loadDictionaryFromFile(directory);
         } catch (IOException e) { System.out.println("Something went wrong during loading from file"); }
         return null;
     }
@@ -91,23 +99,23 @@ public class Dictionary implements Serializable {
         bufferedWriter.close();
     }
 
-    private static Dictionary loadDictionaryFromFile(String directory, String DSType) throws IOException {
+    private static Dictionary loadDictionaryFromFile(String directory) throws IOException {
         Dictionary dictionary = new Dictionary();
         FileReader fileReader = new FileReader(directory);
         BufferedReader bufferedReader = new BufferedReader(fileReader);
         dictionary.indexer = Indexer.loadFromFile(bufferedReader);
-        loadDataStructureFromFile(dictionary, bufferedReader, DSType);
+        loadDataStructureFromFile(dictionary, bufferedReader);
         bufferedReader.close();
         return dictionary;
     }
 
-    private static void loadDataStructureFromFile(
-            Dictionary dictionary, BufferedReader bufferedReader, String DSType) throws IOException {
-        if (DSType.equals("INDEX"))
-            dictionary.dataStructure = InvertedIndex.readFromFile(bufferedReader);
-        else if (DSType.equals("MATRIX"))
+    private static void loadDataStructureFromFile(Dictionary dictionary, BufferedReader bufferedReader) throws IOException {
+        String dsType = bufferedReader.readLine();
+        if (dsType.equals("matrix"))
             dictionary.dataStructure = IncidenceMatrix.readFromFile(bufferedReader);
-        else throw new RuntimeException("No such data structure exists");
+        else if (dsType.equals("index"))
+            dictionary.dataStructure = InvertedIndex.readFromFile(bufferedReader);
+        else throw new RuntimeException("Unknown dictionary type");
     }
 
 }

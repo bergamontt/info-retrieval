@@ -1,5 +1,7 @@
 package dictionary;
 
+import utils.StemmerUtils;
+
 import java.util.Stack;
 
 public class QueryEngine<T> {
@@ -30,11 +32,13 @@ public class QueryEngine<T> {
             } else if (token.equals("!")) {
                 negate = true;
             } else if (negate) {
-                T negated = retrieval.getTermRawDocIDs(token);
-                operands.push(negated);
+                String normalizedToken = StemmerUtils.stem(token);
+                T negated = retrieval.getTermRawDocIDs(normalizedToken);
+                operands.push(retrieval.negate(negated));
                 negate = false;
             } else {
-                operands.push(retrieval.getTermRawDocIDs(token));
+                String normalizedToken = StemmerUtils.stem(token);
+                operands.push(retrieval.getTermRawDocIDs(normalizedToken));
             }
         }
     }

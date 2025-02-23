@@ -40,6 +40,8 @@ public class TxtParser implements Parser {
 
     private void parseLine(String line) {
         Tokenizer tokenizer = new Tokenizer();
-        words.addAll(tokenizer.tokenize(line));
+        List<String> tokens = tokenizer.tokenize(line);
+        words.addAll(tokens);
     }
+
 }
