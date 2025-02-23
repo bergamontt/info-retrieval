@@ -1,5 +1,7 @@
-package dictionary;
+package dictionary.structure;
 
+import dictionary.structure.query.BooleanRetrieval;
+import dictionary.structure.query.QueryEngine;
 import utils.BitSetUtils;
 
 import java.io.*;
@@ -84,9 +86,14 @@ public class IncidenceMatrix implements Serializable, DictionaryDataStructure, B
         return operands.pop();
     }
 
+    @Override
+    public boolean contains(String term) {
+        return incidenceMatrix.containsKey(term);
+    }
+
     private Iterable<Integer> getDocIDsFromBitSet(BitSet bitSet) {
-        if (bitSet == null) return null;
         List<Integer> docIDs = new ArrayList<>();
+        if (bitSet == null) return docIDs;
         for (int i = 0; i < bitSet.length(); i++)
             if (bitSet.get(i)) docIDs.add(i);
         return docIDs;

@@ -1,5 +1,8 @@
 package dictionary;
 
+import dictionary.structure.DictionaryDataStructure;
+import dictionary.structure.IncidenceMatrix;
+import dictionary.structure.InvertedIndex;
 import parser.TxtParser;
 import utils.FileLoader;
 import utils.StemmerUtils;
@@ -35,8 +38,8 @@ public class Dictionary implements Serializable {
     }
 
     public List<String> documentsWithTerm(String term) {
-        List<String> documents = new ArrayList<>();
         String normalizedTerm = StemmerUtils.stem(term);
+        List<String> documents = new ArrayList<>();
         for (int docID : dataStructure.getDocIDsWithTerm(normalizedTerm)) {
             File document = indexer.getDocumentByID(docID);
             documents.add(document.getName());

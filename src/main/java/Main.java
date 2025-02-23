@@ -1,6 +1,5 @@
 import dictionary.Dictionary;
-import dictionary.IncidenceMatrix;
-import dictionary.InvertedIndex;
+import dictionary.structure.InvertedIndex;
 import utils.StopWatch;
 
 public class Main {
@@ -32,7 +31,7 @@ public class Main {
 
         System.out.println();
 
-        for (String document : dictionary.documentsFromQuery("negative | grain & ! treasure"))
+        for (String document : dictionary.documentsFromQuery("! negative & ! grain & ! treasure"))
             System.out.println(document);
 
         System.out.println();

@@ -33,8 +33,7 @@ public class Indexer implements Serializable {
         int filesCount = Integer.parseInt(fileReader.readLine());
         for (int i = 0; i < filesCount; ++i) {
             String filePath = fileReader.readLine();
-            File file = new File(filePath);
-            indexer.addFile(file);
+            indexer.addFile(new File(filePath));
         }
         return indexer;
     }

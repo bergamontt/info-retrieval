@@ -1,4 +1,4 @@
-package dictionary;
+package dictionary.structure.query;
 
 import java.util.Stack;
 
@@ -9,4 +9,5 @@ public interface BooleanRetrieval<T> {
     T concatenate(T operand1, T operand2);
     T getTermRawDocIDs(String token);
     T removeSmallestInSize(Stack<T> operands);
+    boolean contains(String term);
 }

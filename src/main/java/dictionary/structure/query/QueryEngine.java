@@ -1,4 +1,4 @@
-package dictionary;
+package dictionary.structure.query;
 
 import utils.StemmerUtils;
 
@@ -18,6 +18,8 @@ public class QueryEngine<T> {
         Stack<T> operands = new Stack<>();
         processTokens(tokens, operators, operands);
         executeOperators(operators, operands);
+        if (!operators.isEmpty() || operands.size() != 1)
+            throw new RuntimeException("Invalid query: " + query);
         return operands.pop();
     }
 
@@ -33,17 +35,20 @@ public class QueryEngine<T> {
                 negate = true;
             } else if (negate) {
                 String normalizedToken = StemmerUtils.stem(token);
+                validateToken(normalizedToken, token);
                 T negated = retrieval.getTermRawDocIDs(normalizedToken);
                 operands.push(retrieval.negate(negated));
                 negate = false;
             } else {
                 String normalizedToken = StemmerUtils.stem(token);
+                validateToken(normalizedToken, token);
                 operands.push(retrieval.getTermRawDocIDs(normalizedToken));
             }
         }
     }
 
     private void executeOperators(Stack<String> operators, Stack<T> operands) {
+        if (operands.isEmpty()) return;
         T smallest = retrieval.removeSmallestInSize(operands);
         while (!operators.isEmpty()) {
             String operator = operators.pop();
@@ -53,6 +58,11 @@ public class QueryEngine<T> {
             else smallest = retrieval.concatenate(smallest, operand);
         }
         operands.push(smallest);
+    }
+
+    private void validateToken(String normalizedToken, String token) {
+        if (!retrieval.contains(normalizedToken))
+            throw new RuntimeException("Dictionary has no term: " + token);
     }
 
 }

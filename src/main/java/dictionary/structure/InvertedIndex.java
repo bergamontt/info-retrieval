@@ -1,4 +1,7 @@
-package dictionary;
+package dictionary.structure;
+
+import dictionary.structure.query.BooleanRetrieval;
+import dictionary.structure.query.QueryEngine;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -26,6 +29,8 @@ public class InvertedIndex implements Serializable, DictionaryDataStructure, Boo
     }
 
     public Iterable<Integer> getDocIDsWithTerm(String term) {
+        if (!invertedIndex.containsKey(term))
+            return new ArrayList<>();
         return invertedIndex.get(term);
     }
 
@@ -120,6 +125,11 @@ public class InvertedIndex implements Serializable, DictionaryDataStructure, Boo
                 smallest = operand;
         operands.remove(smallest);
         return smallest;
+    }
+
+    @Override
+    public boolean contains(String term) {
+        return invertedIndex.containsKey(term);
     }
 
     private boolean documentsHasDocument(List<Integer> documents, int docID) {

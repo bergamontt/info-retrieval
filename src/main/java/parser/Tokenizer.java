@@ -1,6 +1,5 @@
 package parser;
 
-import opennlp.tools.stemmer.PorterStemmer;
 import utils.StemmerUtils;
 
 import java.util.ArrayList;
