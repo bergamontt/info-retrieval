@@ -1,5 +1,5 @@
 import dictionary.Dictionary;
-import dictionary.structure.InvertedIndex;
+import dictionary.structure.IncidenceMatrix;
 import utils.StopWatch;
 
 public class Main {
@@ -9,10 +9,11 @@ public class Main {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        Dictionary dictionary = new Dictionary(new InvertedIndex());
+        Dictionary dictionary = new Dictionary(new IncidenceMatrix());
         dictionary.addFilesFromFolder("src/main/java/collection");
 
         //Dictionary dictionary = Dictionary.loadFromFile("src/main/java/dictionary/saved/dictionary.dict");
+        //Dictionary dictionary = Dictionary.deserialize("src/main/java/dictionary/saved/dictionary.ser");
 
         if (dictionary == null) return;
 
@@ -36,8 +37,11 @@ public class Main {
 
         System.out.println();
 
-        //dictionary.serialize("src/dictionary/saved/dictionary.ser");
-        //dictionary.writeToFile("src/main/java/dictionary/saved/dictionary.dict");
+        dictionary.serialize("src/main/java/dictionary/saved/dictionary.ser");
+        System.out.println(dictionary.getLastSizeInMB());
+
+        dictionary.writeToFile("src/main/java/dictionary/saved/dictionary.dict");
+        System.out.println(dictionary.getLastSizeInMB());
 
         System.out.println(stopWatch.stop() + "ms");
 
