@@ -2,6 +2,8 @@ package dictionary.structure;
 
 import dictionary.structure.query.BooleanRetrieval;
 import dictionary.structure.query.QueryEngine;
+import dictionary.structure.query.operators.BitSetBooleanOperators;
+import dictionary.structure.query.operators.BooleanOperators;
 import utils.BitSetUtils;
 
 import java.io.*;
@@ -56,24 +58,8 @@ public class IncidenceMatrix implements Serializable, DictionaryDataStructure, B
     }
 
     @Override
-    public BitSet negate(BitSet operand) {
-        BitSet result = (BitSet) operand.clone();
-        result.flip(0, operand.length());
-        return result;
-    }
-
-    @Override
-    public BitSet intersect(BitSet operand1, BitSet operand2) {
-        BitSet result = (BitSet) operand1.clone();
-        result.and(operand2);
-        return result;
-    }
-
-    @Override
-    public BitSet concatenate(BitSet operand1, BitSet operand2) {
-        BitSet result = (BitSet) operand1.clone();
-        result.or(operand2);
-        return result;
+    public BooleanOperators<BitSet> getBooleanOperators() {
+        return new BitSetBooleanOperators();
     }
 
     @Override

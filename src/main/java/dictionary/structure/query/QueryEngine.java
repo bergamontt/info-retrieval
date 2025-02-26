@@ -1,5 +1,6 @@
 package dictionary.structure.query;
 
+import dictionary.structure.query.operators.BooleanOperators;
 import utils.StemmerUtils;
 
 import java.util.Stack;
@@ -7,9 +8,11 @@ import java.util.Stack;
 public class QueryEngine<T> {
 
     private final BooleanRetrieval<T> retrieval;
+    private final BooleanOperators<T> booleanOperators;
 
     public QueryEngine(BooleanRetrieval<T> retrieval) {
         this.retrieval = retrieval;
+        this.booleanOperators = retrieval.getBooleanOperators();
     }
 
     public T getDocIDsFromQuery(String query) {
@@ -37,7 +40,7 @@ public class QueryEngine<T> {
                 String normalizedToken = StemmerUtils.stem(token);
                 validateToken(normalizedToken, token);
                 T negated = retrieval.getTermRawDocIDs(normalizedToken);
-                operands.push(retrieval.negate(negated));
+                operands.push(booleanOperators.negate(negated));
                 negate = false;
             } else {
                 String normalizedToken = StemmerUtils.stem(token);
@@ -54,8 +57,8 @@ public class QueryEngine<T> {
             String operator = operators.pop();
             T operand = operands.pop();
             if (operator.equals("&"))
-                smallest = retrieval.intersect(smallest, operand);
-            else smallest = retrieval.concatenate(smallest, operand);
+                smallest = booleanOperators.intersect(smallest, operand);
+            else smallest = booleanOperators.concatenate(smallest, operand);
         }
         operands.push(smallest);
     }

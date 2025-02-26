@@ -1,4 +1,5 @@
 import dictionary.Dictionary;
+import dictionary.structure.Biword;
 import dictionary.structure.IncidenceMatrix;
 import utils.StopWatch;
 
@@ -9,7 +10,7 @@ public class Main {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        Dictionary dictionary = new Dictionary(new IncidenceMatrix());
+        Dictionary dictionary = new Dictionary(new Biword());
         dictionary.addFilesFromFolder("src/main/java/collection");
 
         //Dictionary dictionary = Dictionary.loadFromFile("src/main/java/dictionary/saved/dictionary.dict");
@@ -32,16 +33,13 @@ public class Main {
 
         System.out.println();
 
-        for (String document : dictionary.documentsFromQuery("! negative & ! grain & ! treasure"))
+        for (String document : dictionary.documentsFromQuery("the man who"))
             System.out.println(document);
 
         System.out.println();
 
-        dictionary.serialize("src/main/java/dictionary/saved/dictionary.ser");
-        System.out.println(dictionary.getLastSizeInMB());
-
-        dictionary.writeToFile("src/main/java/dictionary/saved/dictionary.dict");
-        System.out.println(dictionary.getLastSizeInMB());
+        //dictionary.serialize("src/main/java/dictionary/saved/dictionary.ser");
+        //dictionary.writeToFile("src/main/java/dictionary/saved/dictionary.dict");
 
         System.out.println(stopWatch.stop() + "ms");
 

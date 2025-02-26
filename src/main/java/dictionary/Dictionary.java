@@ -14,7 +14,6 @@ public class Dictionary implements Serializable {
 
     private DictionaryDataStructure dataStructure = new InvertedIndex();
     private Indexer indexer = new Indexer();
-    private String lastSizeInMB;
 
     public Dictionary() {}
 
@@ -82,49 +81,35 @@ public class Dictionary implements Serializable {
         return null;
     }
 
-    public String getLastSizeInMB() {
-        if (lastSizeInMB == null)
-            System.out.println("The Dictionary has not been stored yet");
-        return lastSizeInMB;
-    }
-
     private void serializeDirectory(String directory) throws IOException {
-        File directoryFile = new File(directory);
-        FileOutputStream fos = new FileOutputStream(directoryFile);
+        FileOutputStream fos = new FileOutputStream(directory);
         ObjectOutputStream oos = new ObjectOutputStream(fos);
         oos.writeObject(this);
-        lastSizeInMB = getFileSizeInMB(directoryFile);
         oos.close();
     }
 
     private static Dictionary deserializeDictionary(String directory) throws IOException, ClassNotFoundException {
-        File directoryFile = new File(directory);
-        FileInputStream fis = new FileInputStream(directoryFile);
+        FileInputStream fis = new FileInputStream(directory);
         ObjectInputStream ois = new ObjectInputStream(fis);
         Dictionary dictionary = (dictionary.Dictionary) ois.readObject();
-        dictionary.lastSizeInMB = getFileSizeInMB(directoryFile);
         ois.close();
         return dictionary;
     }
 
     private void writeDictionaryToFile(String directory) throws IOException {
-        File directoryFile = new File(directory);
-        FileWriter fileWriter = new FileWriter(directoryFile);
+        FileWriter fileWriter = new FileWriter(directory);
         BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
         indexer.writeToFile(bufferedWriter);
         dataStructure.writeToFile(bufferedWriter);
-        lastSizeInMB = getFileSizeInMB(directoryFile);
         bufferedWriter.close();
     }
 
     private static Dictionary loadDictionaryFromFile(String directory) throws IOException {
         Dictionary dictionary = new Dictionary();
-        File directoryFile = new File(directory);
-        FileReader fileReader = new FileReader(directoryFile);
+        FileReader fileReader = new FileReader(directory);
         BufferedReader bufferedReader = new BufferedReader(fileReader);
         dictionary.indexer = Indexer.loadFromFile(bufferedReader);
         loadDataStructureFromFile(dictionary, bufferedReader);
-        dictionary.lastSizeInMB = getFileSizeInMB(directoryFile);
         bufferedReader.close();
         return dictionary;
     }
@@ -136,10 +121,6 @@ public class Dictionary implements Serializable {
         else if (dsType.equals("index"))
             dictionary.dataStructure = InvertedIndex.readFromFile(bufferedReader);
         else throw new RuntimeException("Unknown dictionary type");
-    }
-
-    private static String getFileSizeInMB(File file) {
-        return (double) file.length() / (1024 * 1024) + " MB";
     }
 
 }
