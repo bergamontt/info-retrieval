@@ -30,7 +30,7 @@ public class IncidenceMatrix implements Serializable, DictionaryDataStructure, B
         return getDocIDsFromBitSet(bitSet);
     }
 
-    public Iterable<Integer> getDocIDsFromQuery(String query) {
+    public Iterable<Integer> getDocIDsFromQuery(String query) throws NoSuchMethodException {
         QueryEngine<BitSet> queryEngine = new QueryEngine<>(this);
         BitSet result = queryEngine.getDocIDsFromQuery(query);
         return getDocIDsFromBitSet(result);

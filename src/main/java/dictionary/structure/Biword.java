@@ -32,7 +32,7 @@ public class Biword implements DictionaryDataStructure, Serializable, BooleanRet
     }
 
     @Override
-    public Iterable<Integer> getDocIDsFromQuery(String query) {
+    public Iterable<Integer> getDocIDsFromQuery(String query) throws NoSuchMethodException {
         if (isPhraseQuery(query))
             query = translatePhraseQuery(query);
         QueryEngine<List<Integer>> queryEngine = new QueryEngine<>(this);

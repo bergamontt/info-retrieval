@@ -1,5 +1,6 @@
 package dictionary.structure.query.operators;
 
+import dictionary.structure.posting.Position;
 import dictionary.structure.posting.PositionPosting;
 
 import java.util.ArrayList;
@@ -44,34 +45,33 @@ public class PostingBooleanOperators implements BooleanOperators<List<PositionPo
         return result;
     }
 
-    public List<PositionPosting> positionalIntersect(List<PositionPosting> p1, List<PositionPosting> p2, int k) {
+    @Override
+    public List<PositionPosting> positionalIntersect(List<PositionPosting> p1, List<PositionPosting> p2, int k)
+            throws NoSuchMethodException
+    {
         List<PositionPosting> result = new ArrayList<>();
         int i1 = 0, i2 = 0;
         while (i1 < p1.size() && i2 < p2.size()) {
             int docID1 = p1.get(i1).getDocID();
             int docID2 = p2.get(i2).getDocID();
             if (docID1 == docID2) {
-                List<Integer> positions = new ArrayList<>();
-                List<Integer> pp1 = p1.get(i1).getPositions();
-                List<Integer> pp2 = p2.get(i2).getPositions();
-                int pi1 = 0, pi2 = 0;
-                while (pi1 < pp1.size()) {
-                    while (pi2 < pp2.size()) {
-                        int pos1 = pp1.get(pi1);
-                        int pos2 = pp2.get(pi2);
-                        if (Math.abs(pos1 - pos2) < k) {
-                            positions.add(pp2.get(pi2));
-                        } else if (pos2 > pos1) break;
-                        ++pi2;
-                    }
-                    while (!positions.isEmpty() && Math.abs(positions.get(0) - pp1.get(pi1)) > k) {
-                        positions.remove(0);
-                    }
-                    result.add(new PositionPosting(docID1, positions));
-                    ++pi1;
+                List<Position> pp1 = p1.get(i1).getPositions();
+                List<Position> pp2 = p2.get(i2).getPositions();
+                List<Position> currPositions = new ArrayList<>();
+                int ip1 = 0, ip2 = 0;
+                while (ip1 < pp1.size() && ip2 < pp2.size()) {
+                    Position pos1 = pp1.get(ip1);
+                    Position pos2 = pp2.get(ip2);
+                    if (Math.abs(pos1.subtract(pos2)) < k) {
+                        currPositions.add(new Position(pos1.getStart(), pos2.getEnd()));
+                        ++ip2;
+                    } else if (pos1.compareTo(pos2) < 0) {
+                        ++ip1;
+                    } else ++ip2;
                 }
+                result.add(new PositionPosting(docID1, currPositions));
                 ++i1; ++i2;
-            } else if (docID1 > docID2) ++i1;
+            } else if (docID1 < docID2) ++i1;
             else ++i2;
         }
         return result;

@@ -36,7 +36,7 @@ public class InvertedIndex implements Serializable, DictionaryDataStructure, Boo
     }
 
     @Override
-    public Iterable<Integer> getDocIDsFromQuery(String query) {
+    public Iterable<Integer> getDocIDsFromQuery(String query) throws NoSuchMethodException {
         QueryEngine<List<Integer>> queryEngine = new QueryEngine<>(this);
         return queryEngine.getDocIDsFromQuery(query);
     }

@@ -1,6 +1,5 @@
 import dictionary.Dictionary;
-import dictionary.structure.Biword;
-import dictionary.structure.IncidenceMatrix;
+import dictionary.structure.PositionalIndex;
 import utils.StopWatch;
 
 public class Main {
@@ -10,7 +9,7 @@ public class Main {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        Dictionary dictionary = new Dictionary(new Biword());
+        Dictionary dictionary = new Dictionary(new PositionalIndex());
         dictionary.addFilesFromFolder("src/main/java/collection");
 
         //Dictionary dictionary = Dictionary.loadFromFile("src/main/java/dictionary/saved/dictionary.dict");
@@ -33,7 +32,7 @@ public class Main {
 
         System.out.println();
 
-        for (String document : dictionary.documentsFromQuery("the man who"))
+        for (String document : dictionary.documentsFromQuery("In /1 truth"))
             System.out.println(document);
 
         System.out.println();

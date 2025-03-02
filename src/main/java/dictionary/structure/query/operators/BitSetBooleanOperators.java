@@ -25,4 +25,9 @@ public class BitSetBooleanOperators implements BooleanOperators<BitSet> {
         return result;
     }
 
+    @Override
+    public BitSet positionalIntersect(BitSet operand1, BitSet operand2, int k) throws NoSuchMethodException {
+        throw new NoSuchMethodException("BitSet does not support positional intersect");
+    }
+
 }

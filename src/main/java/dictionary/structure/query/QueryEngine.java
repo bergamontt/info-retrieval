@@ -15,7 +15,7 @@ public class QueryEngine<T> {
         this.booleanOperators = retrieval.getBooleanOperators();
     }
 
-    public T getDocIDsFromQuery(String query) {
+    public T getDocIDsFromQuery(String query) throws NoSuchMethodException {
         String[] tokens = query.split(" ");
         Stack<String> operators = new Stack<>();
         Stack<T> operands = new Stack<>();
@@ -26,10 +26,10 @@ public class QueryEngine<T> {
         return operands.pop();
     }
 
-    private void processTokens(String[] tokens, Stack<String> operators, Stack<T> operands) {
+    private void processTokens(String[] tokens, Stack<String> operators, Stack<T> operands) throws NoSuchMethodException {
         boolean negate = false;
         for (String token : tokens) {
-            if (token.equals("&")) {
+            if (token.equals("&") || token.contains("/")) {
                 operators.push(token);
             } else if (token.equals("|")) {
                 executeOperators(operators, operands);
@@ -50,7 +50,7 @@ public class QueryEngine<T> {
         }
     }
 
-    private void executeOperators(Stack<String> operators, Stack<T> operands) {
+    private void executeOperators(Stack<String> operators, Stack<T> operands) throws NoSuchMethodException {
         if (operands.isEmpty()) return;
         T smallest = retrieval.removeSmallestInSize(operands);
         while (!operators.isEmpty()) {
@@ -58,7 +58,10 @@ public class QueryEngine<T> {
             T operand = operands.pop();
             if (operator.equals("&"))
                 smallest = booleanOperators.intersect(smallest, operand);
-            else smallest = booleanOperators.concatenate(smallest, operand);
+            else if (operator.contains("/")) {
+                int k = Integer.parseInt(operator.replace("/", ""));
+                smallest = booleanOperators.positionalIntersect(smallest, operand, k);
+            } else smallest = booleanOperators.concatenate(smallest, operand);
         }
         operands.push(smallest);
     }

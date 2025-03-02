@@ -49,7 +49,8 @@ public class Dictionary implements Serializable {
 
     public List<String> documentsFromQuery(String query) {
         List<String> documents = new ArrayList<>();
-        for (int docID : dataStructure.getDocIDsFromQuery(query)) {
+        Iterable<Integer> docIDs = getDocIDs(query);
+        for (int docID : docIDs) {
             File document = indexer.getDocumentByID(docID);
             documents.add(document.getName());
         }
@@ -121,6 +122,11 @@ public class Dictionary implements Serializable {
         else if (dsType.equals("index"))
             dictionary.dataStructure = InvertedIndex.readFromFile(bufferedReader);
         else throw new RuntimeException("Unknown dictionary type");
+    }
+
+    private Iterable<Integer> getDocIDs(String query) {
+        try { return dataStructure.getDocIDsFromQuery(query);
+        } catch (NoSuchMethodException e) { throw new RuntimeException(e); }
     }
 
 }

@@ -8,7 +8,7 @@ public interface DictionaryDataStructure {
 
     void addDocumentTerms(List<String> terms, int docID);
     Iterable<Integer> getDocIDsWithTerm(String term);
-    Iterable<Integer> getDocIDsFromQuery(String query);
+    Iterable<Integer> getDocIDsFromQuery(String query) throws NoSuchMethodException;
     void writeToFile(BufferedWriter bufferedWriter) throws IOException;
 
 }

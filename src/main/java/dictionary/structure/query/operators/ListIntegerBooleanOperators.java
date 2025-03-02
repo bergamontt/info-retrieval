@@ -57,6 +57,11 @@ public class ListIntegerBooleanOperators implements BooleanOperators<List<Intege
         return result;
     }
 
+    @Override
+    public List<Integer> positionalIntersect(List<Integer> operand1, List<Integer> operand2, int k) throws NoSuchMethodException {
+        throw new NoSuchMethodException("List<Integer> does not support positional intersect");
+    }
+
     private boolean listContains(List<Integer> documents, int docID) {
         int index = Collections.binarySearch(documents, docID);
         return index >= 0;

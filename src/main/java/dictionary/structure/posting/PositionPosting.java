@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PositionPosting extends Posting implements Comparable<PositionPosting> {
-    private List<Integer> positions ;
+    private List<Position> positions ;
 
-    public PositionPosting(int docID, List<Integer> positions) {
+    public PositionPosting(int docID, List<Position> positions) {
         super(docID);
         this.positions = positions;
     }
@@ -16,14 +16,18 @@ public class PositionPosting extends Posting implements Comparable<PositionPosti
     }
 
     public void addPosition(int position) {
+        positions.add(new Position(position));
+    }
+
+    public void addPosition(Position position) {
         positions.add(position);
     }
 
-    public List<Integer> getPositions() {
+    public List<Position> getPositions() {
         return positions;
     }
 
-    public void setPositions(List<Integer> positions) {
+    public void setPositions(List<Position> positions) {
         this.positions = positions;
     }
 

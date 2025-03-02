@@ -2,6 +2,7 @@ package dictionary.structure;
 
 import dictionary.structure.posting.PositionPosting;
 import dictionary.structure.query.BooleanRetrieval;
+import dictionary.structure.query.QueryEngine;
 import dictionary.structure.query.operators.*;
 
 import java.io.BufferedWriter;
@@ -9,7 +10,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 
-public class PositionPostings implements Serializable, DictionaryDataStructure, BooleanRetrieval<List<PositionPosting>> {
+public class PositionalIndex implements Serializable, DictionaryDataStructure, BooleanRetrieval<List<PositionPosting>> {
 
     private final Map<String, List<PositionPosting>> positionPostings = new HashMap<>();
     private int fileCount;
@@ -29,34 +30,19 @@ public class PositionPostings implements Serializable, DictionaryDataStructure, 
     @Override
     public Iterable<Integer> getDocIDsWithTerm(String term) {
         List<PositionPosting> positionPostingList = positionPostings.get(term);
-        List<Integer> docIDs = new ArrayList<>();
-        for (PositionPosting positionPosting : positionPostingList)
-            docIDs.add(positionPosting.getDocID());
-        return docIDs;
+        return getDocIDsFromPostings(positionPostingList);
     }
 
     @Override
-    public Iterable<Integer> getDocIDsFromQuery(String query) {
-        return null;
+    public Iterable<Integer> getDocIDsFromQuery(String query) throws NoSuchMethodException {
+        QueryEngine<List<PositionPosting>> queryEngine = new QueryEngine<>(this);
+        List<PositionPosting> result = queryEngine.getDocIDsFromQuery(query);
+        return getDocIDsFromPostings(result);
     }
 
     @Override
     public void writeToFile(BufferedWriter bufferedWriter) throws IOException {
 
-    }
-
-    private void updatePostingList(int docID, List<PositionPosting> positionPostingList, int currentPosition) {
-        int postingIndex = findPostingPosition(positionPostingList, docID);
-        if (postingIndex == -1) {
-            positionPostingList.add(new PositionPosting(docID));
-        } else {
-            PositionPosting positionPosting = positionPostingList.get(postingIndex);
-            positionPosting.addPosition(currentPosition);
-        }
-    }
-
-    private int findPostingPosition(List<PositionPosting> positionPostingList, int docID) {
-        return Collections.binarySearch(positionPostingList, new PositionPosting(docID));
     }
 
     @Override
@@ -71,11 +57,32 @@ public class PositionPostings implements Serializable, DictionaryDataStructure, 
 
     @Override
     public List<PositionPosting> removeSmallestInSize(Stack<List<PositionPosting>> operands) {
-        return List.of();
+        return operands.pop();
     }
 
     @Override
     public boolean contains(String term) {
         return positionPostings.containsKey(term);
+    }
+
+    private Iterable<Integer> getDocIDsFromPostings(Iterable<PositionPosting> positionPostingList) {
+        List<Integer> docIDs = new ArrayList<>();
+        for (PositionPosting positionPosting : positionPostingList)
+            docIDs.add(positionPosting.getDocID());
+        return docIDs;
+    }
+
+    private void updatePostingList(int docID, List<PositionPosting> positionPostingList, int currentPosition) {
+        int postingIndex = findPostingPosition(positionPostingList, docID);
+        if (postingIndex < 0) {
+            positionPostingList.add(new PositionPosting(docID));
+        } else {
+            PositionPosting positionPosting = positionPostingList.get(postingIndex);
+            positionPosting.addPosition(currentPosition);
+        }
+    }
+
+    private int findPostingPosition(List<PositionPosting> positionPostingList, int docID) {
+        return Collections.binarySearch(positionPostingList, new PositionPosting(docID));
     }
 }
