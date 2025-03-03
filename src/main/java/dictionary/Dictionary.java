@@ -1,7 +1,13 @@
 package dictionary;
 
-import dictionary.structure.*;
+import structure.DictionaryDataStructure;
+import structure.InvertedIndex;
+import query.DocumentFilter;
+import query.phrase.PhraseTranslator;
+import parser.Normalizer;
 import parser.TxtParser;
+import pattern.factory.DataStructureFactory;
+import pattern.factory.PhraseTranslatorFactory;
 import utils.FileLoader;
 import utils.StemmerUtils;
 
@@ -24,7 +30,8 @@ public class Dictionary implements Serializable {
         for (File file : Objects.requireNonNull(folder.listFiles())) {
             int docID = indexer.addFile(file);
             TxtParser parser = new TxtParser(file);
-            dataStructure.addDocumentTerms(parser.getTerms(), docID);
+            Normalizer normalizer = new Normalizer(parser.getTerms());
+            dataStructure.addDocumentTerms(normalizer.getNormalizedWords(), docID);
         }
     }
 
@@ -32,7 +39,8 @@ public class Dictionary implements Serializable {
         File file = FileLoader.loadFile(fileName);
         int docID = indexer.addFile(file);
         TxtParser parser = new TxtParser(file);
-        dataStructure.addDocumentTerms(parser.getTerms(), docID);
+        Normalizer normalizer = new Normalizer(parser.getTerms());
+        dataStructure.addDocumentTerms(normalizer.getNormalizedWords(), docID);
     }
 
     public List<String> documentsWithTerm(String term) {
@@ -47,7 +55,7 @@ public class Dictionary implements Serializable {
 
     public List<String> documentsFromQuery(String query) {
         List<String> documents = new ArrayList<>();
-        Iterable<Integer> docIDs = getDocIDs(query);
+        List<Integer> docIDs = getDocIDs(query);
         for (int docID : docIDs) {
             File document = indexer.getDocumentByID(docID);
             documents.add(document.getName());
@@ -115,18 +123,25 @@ public class Dictionary implements Serializable {
 
     private static void loadDataStructureFromFile(Dictionary dictionary, BufferedReader bufferedReader) throws IOException {
         String dsType = bufferedReader.readLine();
-        switch (dsType) {
-            case "matrix" -> dictionary.dataStructure = IncidenceMatrix.readFromFile(bufferedReader);
-            case "index" -> dictionary.dataStructure = InvertedIndex.readFromFile(bufferedReader);
-            case "biindex" -> dictionary.dataStructure = Biword.readFromFile(bufferedReader);
-            case "posindex" -> dictionary.dataStructure = PositionalIndex.readFromFile(bufferedReader);
-            default -> throw new RuntimeException("Unknown dictionary type");
-        }
+        DataStructureFactory factory = new DataStructureFactory();
+        dictionary.dataStructure = factory.createDataStructure(dsType, bufferedReader);
     }
 
-    private Iterable<Integer> getDocIDs(String query) {
-        try { return dataStructure.getDocIDsFromQuery(query);
+    private List<Integer> getDocIDs(String query) {
+        try {
+            String translatedQuery = translateQuery(query);
+            List<Integer> result = dataStructure.getDocIDsFromQuery(translateQuery(query));
+            if (translatedQuery.equals(query))
+                return result;
+            DocumentFilter documentFilter = new DocumentFilter(indexer);
+            return documentFilter.filter(result, query);
         } catch (NoSuchMethodException e) { throw new RuntimeException(e); }
+    }
+
+    private String translateQuery(String query) {
+        PhraseTranslatorFactory factory = new PhraseTranslatorFactory();
+        PhraseTranslator translator = factory.createPhraseTranslator(dataStructure);
+        return translator.translate(query);
     }
 
 }

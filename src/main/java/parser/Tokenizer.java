@@ -1,7 +1,5 @@
 package parser;
 
-import utils.StemmerUtils;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -15,8 +13,7 @@ public class Tokenizer {
         Matcher matcher = pattern.matcher(line);
         while (matcher.find()) {
             String token = matcher.group();
-            token = StemmerUtils.stem(token);
-            tokens.add(token);
+            tokens.add(token.toLowerCase());
         }
         return tokens;
     }

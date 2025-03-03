@@ -1,7 +1,7 @@
-package dictionary.structure.query.operators;
+package query.operators;
 
-import dictionary.structure.posting.Position;
-import dictionary.structure.posting.PositionPosting;
+import structure.posting.Position;
+import structure.posting.PositionPosting;
 
 import java.util.ArrayList;
 import java.util.Collections;

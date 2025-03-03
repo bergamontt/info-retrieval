@@ -1,6 +1,6 @@
-package dictionary.structure.query;
+package query;
 
-import dictionary.structure.query.operators.BooleanOperators;
+import query.operators.BooleanOperators;
 
 public interface BooleanRetrieval<T> {
 

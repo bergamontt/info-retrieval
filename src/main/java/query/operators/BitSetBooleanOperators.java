@@ -1,4 +1,4 @@
-package dictionary.structure.query.operators;
+package query.operators;
 
 import java.util.BitSet;
 import java.util.Stack;

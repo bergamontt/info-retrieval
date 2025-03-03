@@ -1,9 +1,9 @@
-package dictionary.structure;
+package structure;
 
-import dictionary.structure.query.BooleanRetrieval;
-import dictionary.structure.query.QueryEngine;
-import dictionary.structure.query.operators.BooleanOperators;
-import dictionary.structure.query.operators.ListIntegerBooleanOperators;
+import query.BooleanRetrieval;
+import query.QueryEngine;
+import query.operators.BooleanOperators;
+import query.operators.ListIntegerBooleanOperators;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -33,13 +33,13 @@ public class InvertedIndex implements DictionaryDataStructure, BooleanRetrieval<
         ++fileCount;
     }
 
-    public Iterable<Integer> getDocIDsWithTerm(String term) {
+    public List<Integer> getDocIDsWithTerm(String term) {
         List<Integer> docIds = invertedIndex.get(term);
-        return docIds == null ? Collections.emptyList() : docIds;
+        return docIds == null ? new ArrayList<>() : docIds;
     }
 
     @Override
-    public Iterable<Integer> getDocIDsFromQuery(String query) throws NoSuchMethodException {
+    public List<Integer> getDocIDsFromQuery(String query) throws NoSuchMethodException {
         QueryEngine<List<Integer>> queryEngine = new QueryEngine<>(this);
         return queryEngine.getDocIDsFromQuery(query);
     }
@@ -78,8 +78,7 @@ public class InvertedIndex implements DictionaryDataStructure, BooleanRetrieval<
 
     @Override
     public List<Integer> getTermRawDocIDs(String token) {
-        List<Integer> rawDocIDs = invertedIndex.get(token);
-        return rawDocIDs == null ? new ArrayList<>() : rawDocIDs;
+        return invertedIndex.getOrDefault(token, new ArrayList<>());
     }
 
     @Override

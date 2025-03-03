@@ -1,5 +1,6 @@
 import dictionary.Dictionary;
-import dictionary.structure.PositionalIndex;
+
+import structure.PositionalIndex;
 import utils.StopWatch;
 
 public class Main {
@@ -32,6 +33,7 @@ public class Main {
 
         System.out.println();
 
+        //Covent Garden
         for (String document : dictionary.documentsFromQuery("Covent Garden"))
             System.out.println(document);
 

@@ -1,7 +1,4 @@
-package dictionary.structure;
-
-import dictionary.structure.query.*;
-import utils.QueryUtils;
+package structure;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -42,14 +39,6 @@ public class Biword extends InvertedIndex {
         super.writeToFile(fileWriter);
     }
 
-    @Override
-    public Iterable<Integer> getDocIDsFromQuery(String query) throws NoSuchMethodException {
-        if (QueryUtils.isPhraseQuery(query))
-            query = translatePhraseQuery(query);
-        QueryEngine<List<Integer>> queryEngine = new QueryEngine<>(this);
-        return queryEngine.getDocIDsFromQuery(query);
-    }
-
     private void addDocumentToTerm(int docID, String term) {
         List<Integer> currentTermDocuments = getTermRawDocIDs(term);
         if (!documentsHasDocument(currentTermDocuments, docID))
@@ -60,16 +49,6 @@ public class Biword extends InvertedIndex {
     private boolean documentsHasDocument(List<Integer> documents, int docID) {
         int index = Collections.binarySearch(documents, docID);
         return index >= 0;
-    }
-
-    private String translatePhraseQuery(String query) {
-        String[] words = query.split(" ");
-        StringBuilder result = new StringBuilder();
-        for (int i = 1; i < words.length; ++i) {
-            result.append(words[i - 1]).append("$").append(words[i]);
-            if (i != words.length - 1) result.append(" & ");
-        }
-        return result.toString();
     }
 
 }

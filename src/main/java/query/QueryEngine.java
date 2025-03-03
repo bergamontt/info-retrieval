@@ -1,7 +1,6 @@
-package dictionary.structure.query;
+package query;
 
-import dictionary.structure.query.operators.BooleanOperators;
-import utils.StemmerUtils;
+import query.operators.BooleanOperators;
 
 import java.util.Stack;
 
@@ -22,7 +21,7 @@ public class QueryEngine<T> {
         processTokens(tokens, operators, operands);
         executeOperators(operators, operands);
         if (!operators.isEmpty() || operands.size() != 1)
-            throw new RuntimeException("Invalid query: " + query);
+            throw new RuntimeException("Invalid query");
         return operands.pop();
     }
 
@@ -37,15 +36,11 @@ public class QueryEngine<T> {
             } else if (token.equals("!")) {
                 negate = true;
             } else if (negate) {
-                String normalizedToken = StemmerUtils.stem(token);
-                validateToken(normalizedToken, token);
-                T negated = retrieval.getTermRawDocIDs(normalizedToken);
+                T negated = retrieval.getTermRawDocIDs(token);
                 operands.push(booleanOperators.negate(negated));
                 negate = false;
             } else {
-                String normalizedToken = StemmerUtils.stem(token);
-                validateToken(normalizedToken, token);
-                operands.push(retrieval.getTermRawDocIDs(normalizedToken));
+                operands.push(retrieval.getTermRawDocIDs(token));
             }
         }
     }
@@ -64,11 +59,6 @@ public class QueryEngine<T> {
             } else smallest = booleanOperators.concatenate(smallest, operand);
         }
         operands.push(smallest);
-    }
-
-    private void validateToken(String normalizedToken, String token) {
-        if (!retrieval.contains(normalizedToken))
-            throw new RuntimeException("Dictionary has no term: " + token);
     }
 
 }

@@ -1,4 +1,4 @@
-package dictionary.structure.posting;
+package structure.posting;
 
 import java.io.Serializable;
 

@@ -1,10 +1,10 @@
-package dictionary.structure;
+package structure;
 
-import dictionary.structure.posting.PositionPosting;
-import dictionary.structure.query.BooleanRetrieval;
-import dictionary.structure.query.QueryEngine;
-import dictionary.structure.query.operators.*;
-import utils.QueryUtils;
+import structure.posting.PositionPosting;
+import query.BooleanRetrieval;
+import query.QueryEngine;
+import query.operators.BooleanOperators;
+import query.operators.PostingBooleanOperators;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -29,15 +29,13 @@ public class PositionalIndex implements DictionaryDataStructure, BooleanRetrieva
     }
 
     @Override
-    public Iterable<Integer> getDocIDsWithTerm(String term) {
+    public List<Integer> getDocIDsWithTerm(String term) {
         List<PositionPosting> positionPostingList = positionPostings.get(term);
         return getDocIDsFromPostings(positionPostingList);
     }
 
     @Override
-    public Iterable<Integer> getDocIDsFromQuery(String query) throws NoSuchMethodException {
-        if (QueryUtils.isPhraseQuery(query))
-            query = translatePhraseQuery(query);
+    public List<Integer> getDocIDsFromQuery(String query) throws NoSuchMethodException {
         QueryEngine<List<PositionPosting>> queryEngine = new QueryEngine<>(this);
         List<PositionPosting> result = queryEngine.getDocIDsFromQuery(query);
         return getDocIDsFromPostings(result);
@@ -62,11 +60,10 @@ public class PositionalIndex implements DictionaryDataStructure, BooleanRetrieva
         int termCount = Integer.parseInt(fileReader.readLine());
         for(int i = 0; i < termCount; ++i) {
             String[] termInfo = fileReader.readLine().split(" ");
-            String term = termInfo[0];
             List<PositionPosting> positionPostings = new ArrayList<>();
             for (int j = 1; j < termInfo.length; ++j)
                 positionPostings.add(PositionPosting.parsePosition(termInfo[j]));
-            index.positionPostings.put(term, positionPostings);
+            index.positionPostings.put(termInfo[0], positionPostings);
         }
         return index;
     }
@@ -78,7 +75,7 @@ public class PositionalIndex implements DictionaryDataStructure, BooleanRetrieva
 
     @Override
     public List<PositionPosting> getTermRawDocIDs(String token) {
-        return positionPostings.get(token);
+        return positionPostings.getOrDefault(token, new ArrayList<>());
     }
 
     @Override
@@ -86,7 +83,7 @@ public class PositionalIndex implements DictionaryDataStructure, BooleanRetrieva
         return positionPostings.containsKey(term);
     }
 
-    private Iterable<Integer> getDocIDsFromPostings(Iterable<PositionPosting> positionPostingList) {
+    private List<Integer> getDocIDsFromPostings(List<PositionPosting> positionPostingList) {
         List<Integer> docIDs = new ArrayList<>();
         for (PositionPosting positionPosting : positionPostingList)
             docIDs.add(positionPosting.getDocID());
@@ -105,14 +102,6 @@ public class PositionalIndex implements DictionaryDataStructure, BooleanRetrieva
 
     private int findPostingPosition(List<PositionPosting> positionPostingList, int docID) {
         return Collections.binarySearch(positionPostingList, new PositionPosting(docID));
-    }
-
-    private String translatePhraseQuery(String query) {
-        String[] tokens = query.split(" ");
-        StringBuilder result = new StringBuilder(tokens[0]);
-        for (int i = 1; i < tokens.length; i++)
-            result.append(" ").append(tokens[i]).append(" /").append(1);
-        return result.toString();
     }
 
 }

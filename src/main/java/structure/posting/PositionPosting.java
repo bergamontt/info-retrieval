@@ -1,7 +1,5 @@
-package dictionary.structure.posting;
+package structure.posting;
 
-import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;

@@ -1,9 +1,9 @@
-package dictionary.structure;
+package structure;
 
-import dictionary.structure.query.BooleanRetrieval;
-import dictionary.structure.query.QueryEngine;
-import dictionary.structure.query.operators.BitSetBooleanOperators;
-import dictionary.structure.query.operators.BooleanOperators;
+import query.BooleanRetrieval;
+import query.QueryEngine;
+import query.operators.BitSetBooleanOperators;
+import query.operators.BooleanOperators;
 import utils.BitSetUtils;
 
 import java.io.*;
@@ -25,12 +25,12 @@ public class IncidenceMatrix implements DictionaryDataStructure, BooleanRetrieva
         }
     }
 
-    public Iterable<Integer> getDocIDsWithTerm(String term) {
+    public List<Integer> getDocIDsWithTerm(String term) {
         BitSet bitSet = incidenceMatrix.get(term);
         return getDocIDsFromBitSet(bitSet);
     }
 
-    public Iterable<Integer> getDocIDsFromQuery(String query) throws NoSuchMethodException {
+    public List<Integer> getDocIDsFromQuery(String query) throws NoSuchMethodException {
         QueryEngine<BitSet> queryEngine = new QueryEngine<>(this);
         BitSet result = queryEngine.getDocIDsFromQuery(query);
         return getDocIDsFromBitSet(result);
@@ -64,7 +64,7 @@ public class IncidenceMatrix implements DictionaryDataStructure, BooleanRetrieva
 
     @Override
     public BitSet getTermRawDocIDs(String token) {
-        return incidenceMatrix.get(token);
+        return incidenceMatrix.getOrDefault(token, new BitSet());
     }
 
     @Override
@@ -72,7 +72,7 @@ public class IncidenceMatrix implements DictionaryDataStructure, BooleanRetrieva
         return incidenceMatrix.containsKey(term);
     }
 
-    private Iterable<Integer> getDocIDsFromBitSet(BitSet bitSet) {
+    private List<Integer> getDocIDsFromBitSet(BitSet bitSet) {
         List<Integer> docIDs = new ArrayList<>();
         if (bitSet == null) return docIDs;
         for (int i = 0; i < bitSet.length(); i++)
