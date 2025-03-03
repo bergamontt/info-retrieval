@@ -1,8 +1,6 @@
 package dictionary;
 
-import dictionary.structure.DictionaryDataStructure;
-import dictionary.structure.IncidenceMatrix;
-import dictionary.structure.InvertedIndex;
+import dictionary.structure.*;
 import parser.TxtParser;
 import utils.FileLoader;
 import utils.StemmerUtils;
@@ -117,11 +115,13 @@ public class Dictionary implements Serializable {
 
     private static void loadDataStructureFromFile(Dictionary dictionary, BufferedReader bufferedReader) throws IOException {
         String dsType = bufferedReader.readLine();
-        if (dsType.equals("matrix"))
-            dictionary.dataStructure = IncidenceMatrix.readFromFile(bufferedReader);
-        else if (dsType.equals("index"))
-            dictionary.dataStructure = InvertedIndex.readFromFile(bufferedReader);
-        else throw new RuntimeException("Unknown dictionary type");
+        switch (dsType) {
+            case "matrix" -> dictionary.dataStructure = IncidenceMatrix.readFromFile(bufferedReader);
+            case "index" -> dictionary.dataStructure = InvertedIndex.readFromFile(bufferedReader);
+            case "biindex" -> dictionary.dataStructure = Biword.readFromFile(bufferedReader);
+            case "posindex" -> dictionary.dataStructure = PositionalIndex.readFromFile(bufferedReader);
+            default -> throw new RuntimeException("Unknown dictionary type");
+        }
     }
 
     private Iterable<Integer> getDocIDs(String query) {

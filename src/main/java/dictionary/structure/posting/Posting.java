@@ -1,6 +1,8 @@
 package dictionary.structure.posting;
 
-public class Posting {
+import java.io.Serializable;
+
+public class Posting implements Serializable {
     private int docID;
 
     public Posting(int docID) {

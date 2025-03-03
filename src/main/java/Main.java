@@ -32,7 +32,7 @@ public class Main {
 
         System.out.println();
 
-        for (String document : dictionary.documentsFromQuery("In /1 truth"))
+        for (String document : dictionary.documentsFromQuery("Covent Garden"))
             System.out.println(document);
 
         System.out.println();

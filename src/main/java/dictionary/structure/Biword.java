@@ -1,17 +1,28 @@
 package dictionary.structure;
 
 import dictionary.structure.query.*;
-import dictionary.structure.query.operators.*;
+import utils.QueryUtils;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.*;
 
-public class Biword implements DictionaryDataStructure, Serializable, BooleanRetrieval<List<Integer>> {
+public class Biword extends InvertedIndex {
 
-    private final Map<String, List<Integer>> biword = new HashMap<>();
-    private int fileCount;
+    public static Biword readFromFile(BufferedReader fileReader) throws IOException {
+        Biword biword = new Biword();
+        biword.fileCount = Integer.parseInt(fileReader.readLine());
+        int termCount = Integer.parseInt(fileReader.readLine());
+        for (int i = 0; i < termCount; ++i) {
+            String[] termInfo = fileReader.readLine().split(" ");
+            List<Integer> docIDs = new ArrayList<>();
+            for (int j = 1; j < termInfo.length; ++j)
+                docIDs.add(Integer.parseInt(termInfo[j]));
+            biword.putTerm(termInfo[0], docIDs);
+        }
+        return biword;
+    }
 
     @Override
     public void addDocumentTerms(List<String> terms, int docID) {
@@ -26,49 +37,24 @@ public class Biword implements DictionaryDataStructure, Serializable, BooleanRet
     }
 
     @Override
-    public Iterable<Integer> getDocIDsWithTerm(String term) {
-        List<Integer> docIds = biword.get(term);
-        return docIds == null ? Collections.emptyList() : docIds;
+    public void writeToFile(BufferedWriter fileWriter) throws IOException {
+        fileWriter.write("bi");
+        super.writeToFile(fileWriter);
     }
 
     @Override
     public Iterable<Integer> getDocIDsFromQuery(String query) throws NoSuchMethodException {
-        if (isPhraseQuery(query))
+        if (QueryUtils.isPhraseQuery(query))
             query = translatePhraseQuery(query);
         QueryEngine<List<Integer>> queryEngine = new QueryEngine<>(this);
         return queryEngine.getDocIDsFromQuery(query);
     }
 
-    @Override
-    public void writeToFile(BufferedWriter bufferedWriter) throws IOException {
-
-    }
-
-    @Override
-    public BooleanOperators<List<Integer>> getBooleanOperators() {
-        return new ListIntegerBooleanOperators(fileCount);
-    }
-
-    @Override
-    public List<Integer> getTermRawDocIDs(String token) {
-        return biword.get(token);
-    }
-
-    @Override
-    public List<Integer> removeSmallestInSize(Stack<List<Integer>> operands) {
-        return operands.pop();
-    }
-
-    @Override
-    public boolean contains(String term) {
-        return biword.containsKey(term);
-    }
-
     private void addDocumentToTerm(int docID, String term) {
-        List<Integer> currentTermDocuments = biword.getOrDefault(term, new ArrayList<>());
+        List<Integer> currentTermDocuments = getTermRawDocIDs(term);
         if (!documentsHasDocument(currentTermDocuments, docID))
             currentTermDocuments.add(docID);
-        biword.put(term, currentTermDocuments);
+        putTerm(term, currentTermDocuments);
     }
 
     private boolean documentsHasDocument(List<Integer> documents, int docID) {
@@ -84,10 +70,6 @@ public class Biword implements DictionaryDataStructure, Serializable, BooleanRet
             if (i != words.length - 1) result.append(" & ");
         }
         return result.toString();
-    }
-
-    private boolean isPhraseQuery(String query) {
-        return (!query.contains("|") && !query.contains("!") && !query.contains("&"));
     }
 
 }

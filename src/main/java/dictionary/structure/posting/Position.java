@@ -1,6 +1,8 @@
 package dictionary.structure.posting;
 
-public class Position implements Comparable<Position> {
+import java.io.Serializable;
+
+public class Position implements Comparable<Position>, Serializable {
     private int start;
     private int end;
 
@@ -50,5 +52,10 @@ public class Position implements Comparable<Position> {
     @Override
     public int compareTo(Position that) {
         return this.start - that.start;
+    }
+
+    public String toString() {
+        if (start == end) return start + "";
+        return start + "-" + end;
     }
 }

@@ -8,16 +8,19 @@ import dictionary.structure.query.operators.ListIntegerBooleanOperators;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.*;
 
-public class InvertedIndex implements Serializable, DictionaryDataStructure, BooleanRetrieval<List<Integer>> {
+public class InvertedIndex implements DictionaryDataStructure, BooleanRetrieval<List<Integer>> {
 
-    Map<String, List<Integer>> invertedIndex = new HashMap<>();
-    private int fileCount;
+    private final Map<String, List<Integer>> invertedIndex = new HashMap<>();
+    protected int fileCount;
 
     public Iterable<String> getTerms() {
         return invertedIndex.keySet();
+    }
+
+    public void putTerm(String term, List<Integer> termDocuments) {
+        invertedIndex.put(term, termDocuments);
     }
 
     public void addDocumentTerms(List<String> terms, int docID) {
@@ -75,17 +78,8 @@ public class InvertedIndex implements Serializable, DictionaryDataStructure, Boo
 
     @Override
     public List<Integer> getTermRawDocIDs(String token) {
-        return invertedIndex.get(token);
-    }
-
-    @Override
-    public List<Integer> removeSmallestInSize(Stack<List<Integer>> operands) {
-        List<Integer> smallest = operands.peek();
-        for (List<Integer> operand : operands)
-            if (smallest.size() > operand.size())
-                smallest = operand;
-        operands.remove(smallest);
-        return smallest;
+        List<Integer> rawDocIDs = invertedIndex.get(token);
+        return rawDocIDs == null ? new ArrayList<>() : rawDocIDs;
     }
 
     @Override

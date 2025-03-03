@@ -9,7 +9,7 @@ import utils.BitSetUtils;
 import java.io.*;
 import java.util.*;
 
-public class IncidenceMatrix implements Serializable, DictionaryDataStructure, BooleanRetrieval<BitSet> {
+public class IncidenceMatrix implements DictionaryDataStructure, BooleanRetrieval<BitSet> {
 
     private final Map<String, BitSet> incidenceMatrix = new HashMap<>();
 
@@ -65,11 +65,6 @@ public class IncidenceMatrix implements Serializable, DictionaryDataStructure, B
     @Override
     public BitSet getTermRawDocIDs(String token) {
         return incidenceMatrix.get(token);
-    }
-
-    @Override
-    public BitSet removeSmallestInSize(Stack<BitSet> operands) {
-        return operands.pop();
     }
 
     @Override

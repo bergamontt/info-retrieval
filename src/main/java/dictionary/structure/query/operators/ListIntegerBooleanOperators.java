@@ -3,6 +3,7 @@ package dictionary.structure.query.operators;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Stack;
 
 public class ListIntegerBooleanOperators implements BooleanOperators<List<Integer>> {
 
@@ -55,6 +56,16 @@ public class ListIntegerBooleanOperators implements BooleanOperators<List<Intege
                 result.add(currentValue);
         }
         return result;
+    }
+
+    @Override
+    public List<Integer> getSmallest(Stack<List<Integer>> stack) {
+        List<Integer> smallest = stack.peek();
+        for (List<Integer> operand : stack)
+            if (smallest.size() > operand.size())
+                smallest = operand;
+        stack.remove(smallest);
+        return smallest;
     }
 
     @Override

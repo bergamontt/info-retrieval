@@ -6,6 +6,7 @@ import dictionary.structure.posting.PositionPosting;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Stack;
 
 public class PostingBooleanOperators implements BooleanOperators<List<PositionPosting>>{
 
@@ -90,6 +91,11 @@ public class PostingBooleanOperators implements BooleanOperators<List<PositionPo
                 result.add(currentPosting);
         }
         return result;
+    }
+
+    @Override
+    public List<PositionPosting> getSmallest(Stack<List<PositionPosting>> stack) {
+        return stack.pop();
     }
 
     private boolean listContains(List<PositionPosting> documents, PositionPosting posting) {

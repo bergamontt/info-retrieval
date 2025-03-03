@@ -1,6 +1,7 @@
 package dictionary.structure.query.operators;
 
 import java.util.BitSet;
+import java.util.Stack;
 
 public class BitSetBooleanOperators implements BooleanOperators<BitSet> {
 
@@ -23,6 +24,11 @@ public class BitSetBooleanOperators implements BooleanOperators<BitSet> {
         BitSet result = (BitSet) operand1.clone();
         result.or(operand2);
         return result;
+    }
+
+    @Override
+    public BitSet getSmallest(Stack<BitSet> stack) {
+        return stack.pop();
     }
 
     @Override
