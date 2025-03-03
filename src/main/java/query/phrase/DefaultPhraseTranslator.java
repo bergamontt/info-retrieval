@@ -10,7 +10,7 @@ public class DefaultPhraseTranslator extends PhraseTranslator {
         for (String token : tokens) {
             if (isOperand(token))
                 result.append(" ").append(token).append(" ");
-            else result.append(StemmerUtils.stem(token)).append(" ");
+            else result.append(StemmerUtils.stem(token));
         }
         return result.toString();
     }

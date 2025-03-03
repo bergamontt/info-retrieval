@@ -34,7 +34,7 @@ public class Main {
         System.out.println();
 
         //Covent Garden
-        for (String document : dictionary.documentsFromQuery("Covent Garden"))
+        for (String document : dictionary.documentsFromQuery("began /3 listlessly"))
             System.out.println(document);
 
         System.out.println();

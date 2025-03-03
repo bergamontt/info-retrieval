@@ -1,5 +1,6 @@
 package dictionary;
 
+import query.phrase.DefaultPhraseTranslator;
 import structure.DictionaryDataStructure;
 import structure.InvertedIndex;
 import query.DocumentFilter;
@@ -9,6 +10,7 @@ import parser.TxtParser;
 import pattern.factory.DataStructureFactory;
 import pattern.factory.PhraseTranslatorFactory;
 import utils.FileLoader;
+import utils.QueryUtils;
 import utils.StemmerUtils;
 
 import java.io.*;
@@ -130,8 +132,8 @@ public class Dictionary implements Serializable {
     private List<Integer> getDocIDs(String query) {
         try {
             String translatedQuery = translateQuery(query);
-            List<Integer> result = dataStructure.getDocIDsFromQuery(translateQuery(query));
-            if (translatedQuery.equals(query))
+            List<Integer> result = dataStructure.getDocIDsFromQuery(translatedQuery);
+            if (!QueryUtils.isQueryPhrase(query))
                 return result;
             DocumentFilter documentFilter = new DocumentFilter(indexer);
             return documentFilter.filter(result, query);
@@ -139,8 +141,11 @@ public class Dictionary implements Serializable {
     }
 
     private String translateQuery(String query) {
-        PhraseTranslatorFactory factory = new PhraseTranslatorFactory();
-        PhraseTranslator translator = factory.createPhraseTranslator(dataStructure);
+        PhraseTranslator translator = new DefaultPhraseTranslator();
+        if(QueryUtils.isQueryPhrase(query)) {
+            PhraseTranslatorFactory factory = new PhraseTranslatorFactory();
+            translator = factory.createPhraseTranslator(dataStructure);
+        }
         return translator.translate(query);
     }
 
