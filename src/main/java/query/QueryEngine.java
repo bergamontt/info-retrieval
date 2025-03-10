@@ -1,6 +1,7 @@
 package query;
 
-import query.operators.BooleanOperators;
+import operators.BooleanOperators;
+import operators.BooleanRetrieval;
 
 import java.util.Stack;
 
@@ -39,6 +40,12 @@ public class QueryEngine<T> {
                 T negated = retrieval.getTermRawDocIDs(token);
                 operands.push(booleanOperators.negate(negated));
                 negate = false;
+            } else if (token.contains("*")) {
+                String[] subTokens = token.split("\\*");
+                T result = retrieval.getTermRawDocIDs(subTokens[0]);
+                for (int i = 1; i < subTokens.length; ++i)
+                    result = booleanOperators.concatenate(result, retrieval.getTermRawDocIDs(subTokens[i]));
+                operands.push(result);
             } else {
                 operands.push(retrieval.getTermRawDocIDs(token));
             }

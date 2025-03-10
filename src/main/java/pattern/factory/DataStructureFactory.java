@@ -1,6 +1,6 @@
 package pattern.factory;
 
-import structure.*;
+import dictionary.structure.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;

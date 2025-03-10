@@ -1,4 +1,4 @@
-package structure;
+package dictionary.structure;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

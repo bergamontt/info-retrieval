@@ -1,4 +1,4 @@
-package structure.posting;
+package posting;
 
 import java.io.Serializable;
 import java.util.ArrayList;

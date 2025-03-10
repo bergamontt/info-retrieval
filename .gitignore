@@ -29,5 +29,6 @@ bin/
 .DS_Store
 
 /target
-/src/main/java/collection
 /src/main/java/dictionary/saved
+/src/main/java/amogus
+/src/main/java/collection

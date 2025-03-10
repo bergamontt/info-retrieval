@@ -1,10 +1,7 @@
-package query;
-
-import query.operators.BooleanOperators;
+package operators;
 
 public interface BooleanRetrieval<T> {
 
     BooleanOperators<T> getBooleanOperators();
     T getTermRawDocIDs(String token);
-    boolean contains(String term);
 }

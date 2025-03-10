@@ -1,17 +1,15 @@
 package dictionary;
 
-import query.phrase.DefaultPhraseTranslator;
-import structure.DictionaryDataStructure;
-import structure.InvertedIndex;
-import query.DocumentFilter;
-import query.phrase.PhraseTranslator;
-import parser.Normalizer;
-import parser.TxtParser;
+import dictionary.structure.DictionaryDataStructure;
+import dictionary.structure.InvertedIndex;
+import dictionary.termIndexer.KgramIndexer;
+import dictionary.termIndexer.PermutermIndexer;
+import dictionary.termIndexer.TrieTermIndexer;
+import dictionary.termIndexer.TermIndexer;
+import query.QueryHandler;
 import pattern.factory.DataStructureFactory;
-import pattern.factory.PhraseTranslatorFactory;
-import utils.FileLoader;
-import utils.QueryUtils;
-import utils.StemmerUtils;
+import parser.*;
+import utils.*;
 
 import java.io.*;
 import java.util.*;
@@ -19,6 +17,7 @@ import java.util.*;
 public class Dictionary implements Serializable {
 
     private DictionaryDataStructure dataStructure = new InvertedIndex();
+    private TermIndexer termIndexer = new KgramIndexer();
     private Indexer indexer = new Indexer();
 
     public Dictionary() {}
@@ -29,20 +28,13 @@ public class Dictionary implements Serializable {
 
     public void addFilesFromFolder(String folderName) {
         File folder = FileLoader.loadFolder(folderName);
-        for (File file : Objects.requireNonNull(folder.listFiles())) {
-            int docID = indexer.addFile(file);
-            TxtParser parser = new TxtParser(file);
-            Normalizer normalizer = new Normalizer(parser.getTerms());
-            dataStructure.addDocumentTerms(normalizer.getNormalizedWords(), docID);
-        }
+        for (File file : Objects.requireNonNull(folder.listFiles()))
+            addTermsFromFile(file);
     }
 
     public void addFile(String fileName) {
         File file = FileLoader.loadFile(fileName);
-        int docID = indexer.addFile(file);
-        TxtParser parser = new TxtParser(file);
-        Normalizer normalizer = new Normalizer(parser.getTerms());
-        dataStructure.addDocumentTerms(normalizer.getNormalizedWords(), docID);
+        addTermsFromFile(file);
     }
 
     public List<String> documentsWithTerm(String term) {
@@ -90,6 +82,15 @@ public class Dictionary implements Serializable {
         return null;
     }
 
+    private void addTermsFromFile(File file) {
+        int docID = indexer.addFile(file);
+        TxtParser parser = new TxtParser(file);
+        Normalizer normalizer = new Normalizer(parser.getTerms());
+        List<String> normalizedTerms = normalizer.getNormalizedWords();
+        termIndexer.addTerms(normalizedTerms);
+        dataStructure.addDocumentTerms(normalizedTerms, docID);
+    }
+
     private void serializeDirectory(String directory) throws IOException {
         FileOutputStream fos = new FileOutputStream(directory);
         ObjectOutputStream oos = new ObjectOutputStream(fos);
@@ -130,23 +131,9 @@ public class Dictionary implements Serializable {
     }
 
     private List<Integer> getDocIDs(String query) {
-        try {
-            String translatedQuery = translateQuery(query);
-            List<Integer> result = dataStructure.getDocIDsFromQuery(translatedQuery);
-            if (!QueryUtils.isQueryPhrase(query))
-                return result;
-            DocumentFilter documentFilter = new DocumentFilter(indexer);
-            return documentFilter.filter(result, query);
+        try { QueryHandler queryHandler = new QueryHandler(dataStructure, termIndexer, indexer);
+            return queryHandler.getDocIDs(query);
         } catch (NoSuchMethodException e) { throw new RuntimeException(e); }
-    }
-
-    private String translateQuery(String query) {
-        PhraseTranslator translator = new DefaultPhraseTranslator();
-        if(QueryUtils.isQueryPhrase(query)) {
-            PhraseTranslatorFactory factory = new PhraseTranslatorFactory();
-            translator = factory.createPhraseTranslator(dataStructure);
-        }
-        return translator.translate(query);
     }
 
 }

@@ -1,6 +1,6 @@
 import dictionary.Dictionary;
 
-import structure.PositionalIndex;
+import dictionary.structure.PositionalIndex;
 import utils.StopWatch;
 
 public class Main {
@@ -16,28 +16,29 @@ public class Main {
         //Dictionary dictionary = Dictionary.loadFromFile("src/main/java/dictionary/saved/dictionary.dict");
         //Dictionary dictionary = Dictionary.deserialize("src/main/java/dictionary/saved/dictionary.ser");
 
-        if (dictionary == null) return;
+//        if (dictionary == null) return;
+//
+//        for (String document : dictionary.documentsWithTerm("negative"))
+//            System.out.println(document);
+//
+//        System.out.println();
+//
+//        for (String document : dictionary.documentsWithTerm("grain"))
+//            System.out.println(document);
+//
+//        System.out.println();
+//
+//        for (String document : dictionary.documentsWithTerm("treasure"))
+//            System.out.println(document);
+//
+//        System.out.println();
+//
+//        //Covent Garden
 
-        for (String document : dictionary.documentsWithTerm("negative"))
+        for (String document : dictionary.documentsFromQuery("he /1 had /1 been /1 to /1 Sib* /1 Vane"))
             System.out.println(document);
-
-        System.out.println();
-
-        for (String document : dictionary.documentsWithTerm("grain"))
-            System.out.println(document);
-
-        System.out.println();
-
-        for (String document : dictionary.documentsWithTerm("treasure"))
-            System.out.println(document);
-
-        System.out.println();
-
-        //Covent Garden
-        for (String document : dictionary.documentsFromQuery("began /3 listlessly"))
-            System.out.println(document);
-
-        System.out.println();
+//
+//        System.out.println();
 
         //dictionary.serialize("src/main/java/dictionary/saved/dictionary.ser");
         //dictionary.writeToFile("src/main/java/dictionary/saved/dictionary.dict");

@@ -1,4 +1,4 @@
-package query.operators;
+package operators;
 
 import java.util.Stack;
 

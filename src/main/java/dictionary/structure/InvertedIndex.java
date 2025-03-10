@@ -1,9 +1,9 @@
-package structure;
+package dictionary.structure;
 
-import query.BooleanRetrieval;
+import operators.BooleanRetrieval;
 import query.QueryEngine;
-import query.operators.BooleanOperators;
-import query.operators.ListIntegerBooleanOperators;
+import operators.BooleanOperators;
+import operators.ListIntegerBooleanOperators;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -79,11 +79,6 @@ public class InvertedIndex implements DictionaryDataStructure, BooleanRetrieval<
     @Override
     public List<Integer> getTermRawDocIDs(String token) {
         return invertedIndex.getOrDefault(token, new ArrayList<>());
-    }
-
-    @Override
-    public boolean contains(String term) {
-        return invertedIndex.containsKey(term);
     }
 
     private boolean documentsHasDocument(List<Integer> documents, int docID) {

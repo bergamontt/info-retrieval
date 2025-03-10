@@ -1,4 +1,4 @@
-package query.phrase;
+package query.phraseTranslator;
 
 import utils.StemmerUtils;
 

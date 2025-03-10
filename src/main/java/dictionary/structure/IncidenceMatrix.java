@@ -1,9 +1,9 @@
-package structure;
+package dictionary.structure;
 
-import query.BooleanRetrieval;
+import operators.BooleanRetrieval;
 import query.QueryEngine;
-import query.operators.BitSetBooleanOperators;
-import query.operators.BooleanOperators;
+import operators.BitSetBooleanOperators;
+import operators.BooleanOperators;
 import utils.BitSetUtils;
 
 import java.io.*;
@@ -65,11 +65,6 @@ public class IncidenceMatrix implements DictionaryDataStructure, BooleanRetrieva
     @Override
     public BitSet getTermRawDocIDs(String token) {
         return incidenceMatrix.getOrDefault(token, new BitSet());
-    }
-
-    @Override
-    public boolean contains(String term) {
-        return incidenceMatrix.containsKey(term);
     }
 
     private List<Integer> getDocIDsFromBitSet(BitSet bitSet) {

@@ -1,10 +1,10 @@
-package structure;
+package dictionary.structure;
 
-import structure.posting.PositionPosting;
-import query.BooleanRetrieval;
+import posting.PositionPosting;
+import operators.BooleanRetrieval;
 import query.QueryEngine;
-import query.operators.BooleanOperators;
-import query.operators.PostingBooleanOperators;
+import operators.BooleanOperators;
+import operators.PostingBooleanOperators;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -76,11 +76,6 @@ public class PositionalIndex implements DictionaryDataStructure, BooleanRetrieva
     @Override
     public List<PositionPosting> getTermRawDocIDs(String token) {
         return positionPostings.getOrDefault(token, new ArrayList<>());
-    }
-
-    @Override
-    public boolean contains(String term) {
-        return positionPostings.containsKey(term);
     }
 
     private List<Integer> getDocIDsFromPostings(List<PositionPosting> positionPostingList) {

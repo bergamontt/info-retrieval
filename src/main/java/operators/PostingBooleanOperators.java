@@ -1,7 +1,7 @@
-package query.operators;
+package operators;
 
-import structure.posting.Position;
-import structure.posting.PositionPosting;
+import posting.Position;
+import posting.PositionPosting;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -83,12 +83,45 @@ public class PostingBooleanOperators implements BooleanOperators<List<PositionPo
         List<PositionPosting> result = new ArrayList<>();
         int i = 0, j = 0;
         while (i < p1.size() || j < p2.size()) {
-            PositionPosting currentPosting;
-            if (i < p1.size() && (j >= p2.size() || p1.get(i).compareTo(p2.get(j)) < 0))
-                currentPosting = p1.get(i++);
-            else currentPosting = p2.get(j++);
-            if (!listContains(result, currentPosting))
-                result.add(currentPosting);
+            if (j >= p2.size()) {
+                result.add(p1.get(i));
+                ++i;
+            } else if (i >= p1.size()) {
+                result.add(p2.get(j));
+                ++j;
+            } else {
+                PositionPosting posting1 = p1.get(i);
+                PositionPosting posting2 = p2.get(j);
+                if (posting1.getDocID() == posting2.getDocID()) {
+                    List<Position> positions = new ArrayList<>();
+                    List<Position> pos1 = posting1.getPositions();
+                    List<Position> pos2 = posting2.getPositions();
+                    int ip1 = 0, ip2 = 0;
+                    while (ip1 < pos1.size() && ip2 < pos2.size()) {
+                        Position ps1 = pos1.get(ip1);
+                        Position ps2 = pos2.get(ip2);
+                        int cmp = ps1.compareTo(ps2);
+                        if (cmp > 0) {
+                            positions.add(ps2);
+                            ++ip2;
+                        } else if (cmp < 0) {
+                            positions.add(ps1);
+                            ++ip1;
+                        } else {
+                            positions.add(ps1);
+                            ++ip1; ++ip2;
+                        }
+                    }
+                    result.add(new PositionPosting(posting1.getDocID(), positions));
+                    ++i; ++j;
+                } else if (posting1.getDocID() > posting2.getDocID()) {
+                    result.add(posting2);
+                    ++j;
+                } else {
+                    result.add(posting1);
+                    ++i;
+                }
+            }
         }
         return result;
     }
