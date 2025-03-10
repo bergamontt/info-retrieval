@@ -8,7 +8,7 @@ public class KgramIndexer implements TermIndexer {
 
     @Override
     public void addTerm(String term) {
-        String base = "$$" + term + "$$";
+        String base = "$$" + term.toLowerCase() + "$$";
         List<String> termKgrams = kgrams(base);
         for (String kgram : termKgrams) {
             List<String> terms = kgrams.getOrDefault(kgram, new ArrayList<>());
@@ -36,13 +36,14 @@ public class KgramIndexer implements TermIndexer {
                     intersected.add(kgramTerm);
             terms = intersected;
         }
-        return terms.stream().toList();
+        return TermIndexerFilter.filter(terms.stream().toList(), query);
     }
 
     private List<String> mergeTokensKgrams(String[] tokens) {
         List<String> mergedKgrams = new ArrayList<>();
         for (String token : tokens)
-            mergedKgrams.addAll(kgrams(token));
+            if (token.length() > 2)
+                mergedKgrams.addAll(kgrams(token));
         return mergedKgrams;
     }
 

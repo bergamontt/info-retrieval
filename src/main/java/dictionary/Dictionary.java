@@ -85,10 +85,10 @@ public class Dictionary implements Serializable {
     private void addTermsFromFile(File file) {
         int docID = indexer.addFile(file);
         TxtParser parser = new TxtParser(file);
-        Normalizer normalizer = new Normalizer(parser.getTerms());
-        List<String> normalizedTerms = normalizer.getNormalizedWords();
-        termIndexer.addTerms(normalizedTerms);
-        dataStructure.addDocumentTerms(normalizedTerms, docID);
+        List<String> terms = parser.getTerms();
+        termIndexer.addTerms(terms);
+        Normalizer normalizer = new Normalizer(terms);
+        dataStructure.addDocumentTerms(normalizer.getNormalizedWords(), docID);
     }
 
     private void serializeDirectory(String directory) throws IOException {

@@ -53,7 +53,7 @@ public class QueryEngine<T> {
     }
 
     private void executeOperators(Stack<String> operators, Stack<T> operands) throws NoSuchMethodException {
-        if (operands.isEmpty()) return;
+        if (operands.isEmpty() || operators.isEmpty()) return;
         T smallest = booleanOperators.getSmallest(operands);
         while (!operators.isEmpty()) {
             String operator = operators.pop();

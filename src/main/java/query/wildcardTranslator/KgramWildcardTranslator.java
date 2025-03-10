@@ -19,7 +19,9 @@ public class KgramWildcardTranslator implements WildcardTranslator {
             if (!translatedToken.contains("*"))
                 continue;
             if (translatedToken.charAt(0) != '*')
-                translatedToken = "$" + translatedToken.toLowerCase();
+                translatedToken = "$$" + translatedToken.toLowerCase();
+            if (translatedToken.charAt(translatedToken.length() - 1) != '*')
+                translatedToken += "$$";
             List<String> terms = termIndexer.getTermsFromQuery(translatedToken);
             StringBuilder sb = new StringBuilder(terms.get(0));
             for (int i = 1; i < terms.size(); ++i)

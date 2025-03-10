@@ -17,6 +17,8 @@ public class PermutermWildcardTranslator implements WildcardTranslator {
         for (String word : words) {
             if (!word.contains("*")) continue;
             String normalized = word.toLowerCase();
+            if(normalized.charAt(normalized.length() - 1) != '*')
+                normalized += '$';
             List<String> result = termIndexer.getTermsFromQuery(normalized);
             StringBuilder sb = new StringBuilder(result.isEmpty() ? "" : result.get(0));
             for (int i = 1; i < result.size(); ++i)

@@ -3,7 +3,6 @@ package dictionary.termIndexer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class PermutermIndexer implements TermIndexer {
 
@@ -11,7 +10,7 @@ public class PermutermIndexer implements TermIndexer {
 
     @Override
     public void addTerm(String term) {
-        List<String> permutations = getCyclicPermutations(term);
+        List<String> permutations = getCyclicPermutations(term.toLowerCase());
         for (String permutation : permutations)
             permuterm.addTerm(permutation);
     }
@@ -24,16 +23,39 @@ public class PermutermIndexer implements TermIndexer {
 
     @Override
     public List<String> getTermsFromQuery(String query) {
-        String translatedQuery = shiftAsterisk(query).replace("*", "");
+        String translatedQuery = translateQuery(query);
         List<String> rawTerms = permuterm.termsStartWith(translatedQuery);
-        return filterRawTerms(rawTerms);
+        List<String> translatedTerms = translateRawTerms(rawTerms);
+        return filterTerms(translatedTerms, query);
     }
 
-    private List<String> filterRawTerms(List<String> terms) {
+    private String translateQuery(String query) {
+        if (isComplex(query)) {
+            String[] parts = query.split("\\*");
+            query = parts[0] + "*" + parts[parts.length - 1];
+        }
+        return shiftAsterisk(query).replace("*", "");
+    }
+
+    private boolean isComplex(String query) {
+        int count = 0;
+        for (char c : query.toCharArray()) {
+            if (c == '*') count++;
+            if (count >= 2) return true;
+        }
+        return false;
+    }
+
+    private List<String> filterTerms(List<String> terms, String query) {
+        if (!isComplex(query)) return terms;
+        return TermIndexerFilter.filter(terms.stream().toList(), query);
+    }
+
+    private List<String> translateRawTerms(List<String> terms) {
         HashSet<String> termSet = new HashSet<>();
         for (String term : terms) {
             int dollarIndex = term.indexOf('$');
-            String rotatedTerm = rotate(term, terms.size() - dollarIndex, true);
+            String rotatedTerm = rotate(term, term.length() - dollarIndex - 1, true);
             termSet.add(rotatedTerm.replace("$", ""));
         }
         return new ArrayList<>(termSet);
@@ -51,9 +73,9 @@ public class PermutermIndexer implements TermIndexer {
 
     private String shiftAsterisk(String query) {
         int asteriskIndex = query.indexOf('*');
-        if (asteriskIndex == -1)
+        if (asteriskIndex == -1 || asteriskIndex == query.length() - 1)
             return query;
-        return rotate(query, query.length() - asteriskIndex, true);
+        return rotate(query, asteriskIndex + 1, false);
     }
 
     private String rotate(String s, int c, boolean forward) {

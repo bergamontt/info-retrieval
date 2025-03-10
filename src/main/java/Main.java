@@ -16,26 +16,9 @@ public class Main {
         //Dictionary dictionary = Dictionary.loadFromFile("src/main/java/dictionary/saved/dictionary.dict");
         //Dictionary dictionary = Dictionary.deserialize("src/main/java/dictionary/saved/dictionary.ser");
 
-//        if (dictionary == null) return;
-//
-//        for (String document : dictionary.documentsWithTerm("negative"))
-//            System.out.println(document);
-//
-//        System.out.println();
-//
-//        for (String document : dictionary.documentsWithTerm("grain"))
-//            System.out.println(document);
-//
-//        System.out.println();
-//
-//        for (String document : dictionary.documentsWithTerm("treasure"))
-//            System.out.println(document);
-//
-//        System.out.println();
-//
-//        //Covent Garden
+        //he had been to Sibyl Vane
 
-        for (String document : dictionary.documentsFromQuery("he /1 had /1 been /1 to /1 Sib* /1 Vane"))
+        for (String document : dictionary.documentsFromQuery("d*ri*n"))
             System.out.println(document);
 //
 //        System.out.println();

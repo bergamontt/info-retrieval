@@ -16,7 +16,7 @@ public class TrieWildcardTranslator implements WildcardTranslator {
         String[] words = query.split(" ");
         for (String word : words) {
             if (!word.contains("*")) continue;
-            String normalized = word.replace("*", "").toLowerCase();
+            String normalized = word.toLowerCase();
             List<String> result = termIndexer.getTermsFromQuery(normalized);
             StringBuilder sb = new StringBuilder(result.isEmpty() ? "" : result.get(0));
             for (int i = 1; i < result.size(); ++i)
