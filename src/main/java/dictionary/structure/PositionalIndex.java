@@ -1,5 +1,7 @@
 package dictionary.structure;
 
+import dictionary.termIndexer.*;
+import parser.Normalizer;
 import posting.PositionPosting;
 import operators.BooleanRetrieval;
 import query.QueryEngine;
@@ -14,17 +16,13 @@ import java.util.*;
 public class PositionalIndex implements DictionaryDataStructure, BooleanRetrieval<List<PositionPosting>> {
 
     private final Map<String, List<PositionPosting>> positionPostings = new HashMap<>();
+    private final TermIndexer termIndexer = new KgramIndexer();
     private int fileCount;
 
     @Override
     public void addDocumentTerms(List<String> terms, int docID) {
-        int currentPosition = 0;
-        for (String term : terms) {
-            List<PositionPosting> positionPostingList = positionPostings.getOrDefault(term, new ArrayList<>());
-            updatePostingList(docID, positionPostingList, currentPosition);
-            positionPostings.put(term, positionPostingList);
-            ++currentPosition;
-        }
+        termIndexer.addTerms(terms);
+        normalizeAndAddTerms(terms, docID);
         ++fileCount;
     }
 
@@ -36,7 +34,7 @@ public class PositionalIndex implements DictionaryDataStructure, BooleanRetrieva
 
     @Override
     public List<Integer> getDocIDsFromQuery(String query) throws NoSuchMethodException {
-        QueryEngine<List<PositionPosting>> queryEngine = new QueryEngine<>(this);
+        QueryEngine<List<PositionPosting>> queryEngine = new QueryEngine<>(this, termIndexer);
         List<PositionPosting> result = queryEngine.getDocIDsFromQuery(query);
         return getDocIDsFromPostings(result);
     }
@@ -70,12 +68,22 @@ public class PositionalIndex implements DictionaryDataStructure, BooleanRetrieva
 
     @Override
     public BooleanOperators<List<PositionPosting>> getBooleanOperators() {
-        return new PostingBooleanOperators(fileCount);
+        return new PostingBooleanOperators(termIndexer, fileCount);
     }
 
     @Override
     public List<PositionPosting> getTermRawDocIDs(String token) {
         return positionPostings.getOrDefault(token, new ArrayList<>());
+    }
+
+    private void normalizeAndAddTerms(List<String> terms, int docID) {
+        Normalizer normalizer = new Normalizer(terms);
+        int currentPosition = 0;
+        for (String term : normalizer.getNormalizedTerms()) {
+            List<PositionPosting> positionPostingList = positionPostings.getOrDefault(term, new ArrayList<>());
+            updatePostingList(docID, positionPostingList, ++currentPosition);
+            positionPostings.put(term, positionPostingList);
+        }
     }
 
     private List<Integer> getDocIDsFromPostings(List<PositionPosting> positionPostingList) {
@@ -88,7 +96,9 @@ public class PositionalIndex implements DictionaryDataStructure, BooleanRetrieva
     private void updatePostingList(int docID, List<PositionPosting> positionPostingList, int currentPosition) {
         int postingIndex = findPostingPosition(positionPostingList, docID);
         if (postingIndex < 0) {
-            positionPostingList.add(new PositionPosting(docID));
+            PositionPosting positionPosting = new PositionPosting(docID);
+            positionPosting.addPosition(currentPosition);
+            positionPostingList.add(positionPosting);
         } else {
             PositionPosting positionPosting = positionPostingList.get(postingIndex);
             positionPosting.addPosition(currentPosition);

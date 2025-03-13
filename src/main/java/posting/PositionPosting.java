@@ -5,11 +5,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PositionPosting extends Posting implements Comparable<PositionPosting>, Serializable {
-    private List<Position> positions ;
+    private List<Position> positions;
 
     public PositionPosting(int docID, List<Position> positions) {
         super(docID);
         this.positions = positions;
+    }
+
+    public PositionPosting(int docID) {
+        this(docID, new ArrayList<>());
     }
 
     public static PositionPosting parsePosition(String line) {
@@ -19,10 +23,6 @@ public class PositionPosting extends Posting implements Comparable<PositionPosti
         for (int i = 1; i < postingInfo.length; ++i)
             positions.add(new Position(Integer.parseInt(postingInfo[i])));
         return new PositionPosting(docID, positions);
-    }
-
-    public PositionPosting(int docID) {
-        this(docID, new ArrayList<>());
     }
 
     public void addPosition(int position) {

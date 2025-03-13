@@ -1,18 +1,29 @@
 package query;
 
+import dictionary.termIndexer.TermIndexer;
 import operators.BooleanOperators;
 import operators.BooleanRetrieval;
+import parser.Normalizer;
 
+import java.util.List;
 import java.util.Stack;
 
 public class QueryEngine<T> {
 
     private final BooleanRetrieval<T> retrieval;
     private final BooleanOperators<T> booleanOperators;
+    private final TermIndexer termIndexer;
 
     public QueryEngine(BooleanRetrieval<T> retrieval) {
         this.retrieval = retrieval;
         this.booleanOperators = retrieval.getBooleanOperators();
+        termIndexer = null;
+    }
+
+    public QueryEngine(BooleanRetrieval<T> retrieval, TermIndexer termIndexer) {
+        this.retrieval = retrieval;
+        this.booleanOperators = retrieval.getBooleanOperators();
+        this.termIndexer = termIndexer;
     }
 
     public T getDocIDsFromQuery(String query) throws NoSuchMethodException {
@@ -41,10 +52,12 @@ public class QueryEngine<T> {
                 operands.push(booleanOperators.negate(negated));
                 negate = false;
             } else if (token.contains("*")) {
-                String[] subTokens = token.split("\\*");
-                T result = retrieval.getTermRawDocIDs(subTokens[0]);
-                for (int i = 1; i < subTokens.length; ++i)
-                    result = booleanOperators.concatenate(result, retrieval.getTermRawDocIDs(subTokens[i]));
+                List<String> queryTerms = termIndexer.getTermsFromQuery(token.toLowerCase());
+                Normalizer normalizer = new Normalizer(queryTerms);
+                queryTerms = normalizer.getNormalizedTerms();
+                T result = retrieval.getTermRawDocIDs(queryTerms.remove(0));
+                for (String queryTerm : queryTerms)
+                    result = booleanOperators.concatenate(result, retrieval.getTermRawDocIDs(queryTerm));
                 operands.push(result);
             } else {
                 operands.push(retrieval.getTermRawDocIDs(token));

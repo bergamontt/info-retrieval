@@ -8,11 +8,14 @@ import java.util.regex.Pattern;
 public class Tokenizer {
 
     public List<String> tokenize(String line) {
+        if (line.equals("“I am so sorry for it all, Dorian,” said Lord Henry as he entered. “But"))
+            System.out.println();
         List<String> tokens = new ArrayList<>();
-        Pattern pattern = Pattern.compile("(?!.*/)[a-zA-Z0-9]+(['-`]?[a-zA-Z0-9]+)*");
+        Pattern pattern = Pattern.compile("[a-zA-Z0-9-'`]*");
         Matcher matcher = pattern.matcher(line);
         while (matcher.find()) {
             String token = matcher.group();
+            if (token.isEmpty()) continue;
             tokens.add(token.toLowerCase());
         }
         return tokens;

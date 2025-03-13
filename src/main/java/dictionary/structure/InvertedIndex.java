@@ -1,9 +1,11 @@
 package dictionary.structure;
 
+import dictionary.termIndexer.KgramIndexer;
+import dictionary.termIndexer.TermIndexer;
 import operators.BooleanRetrieval;
+import parser.Normalizer;
 import query.QueryEngine;
-import operators.BooleanOperators;
-import operators.ListIntegerBooleanOperators;
+import operators.*;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -13,6 +15,7 @@ import java.util.*;
 public class InvertedIndex implements DictionaryDataStructure, BooleanRetrieval<List<Integer>> {
 
     private final Map<String, List<Integer>> invertedIndex = new HashMap<>();
+    private final TermIndexer termIndexer = new KgramIndexer();
     protected int fileCount;
 
     public Iterable<String> getTerms() {
@@ -24,12 +27,8 @@ public class InvertedIndex implements DictionaryDataStructure, BooleanRetrieval<
     }
 
     public void addDocumentTerms(List<String> terms, int docID) {
-        for (String term : terms) {
-            List<Integer> documents = invertedIndex.getOrDefault(term, new ArrayList<>());
-            if (documentsHasDocument(documents, docID)) continue;
-            documents.add(docID);
-            invertedIndex.put(term, documents);
-        }
+        termIndexer.addTerms(terms);
+        addNormalizedTerms(terms, docID);
         ++fileCount;
     }
 
@@ -42,6 +41,21 @@ public class InvertedIndex implements DictionaryDataStructure, BooleanRetrieval<
     public List<Integer> getDocIDsFromQuery(String query) throws NoSuchMethodException {
         QueryEngine<List<Integer>> queryEngine = new QueryEngine<>(this);
         return queryEngine.getDocIDsFromQuery(query);
+    }
+
+    public String translate(String query) {
+        String[] tokens = query.split(" ");
+        for (String token : tokens) {
+            String translatedToken = token;
+            if (!translatedToken.contains("*"))
+                continue;
+            if (translatedToken.charAt(0) != '*')
+                translatedToken = "$$" + translatedToken.toLowerCase();
+            if (translatedToken.charAt(translatedToken.length() - 1) != '*')
+                translatedToken += "$$";
+            List<String> terms = termIndexer.getTermsFromQuery(translatedToken);
+        }
+        return query;
     }
 
     public void writeToFile(BufferedWriter fileWriter) throws IOException {
@@ -79,6 +93,17 @@ public class InvertedIndex implements DictionaryDataStructure, BooleanRetrieval<
     @Override
     public List<Integer> getTermRawDocIDs(String token) {
         return invertedIndex.getOrDefault(token, new ArrayList<>());
+    }
+
+    private void addNormalizedTerms(List<String> terms, int docID) {
+        Normalizer normalizer = new Normalizer(terms);
+        List<String> normalized = normalizer.getNormalizedTerms();
+        for (String term : normalized) {
+            List<Integer> documents = invertedIndex.getOrDefault(term, new ArrayList<>());
+            if (documentsHasDocument(documents, docID)) continue;
+            documents.add(docID);
+            invertedIndex.put(term, documents);
+        }
     }
 
     private boolean documentsHasDocument(List<Integer> documents, int docID) {

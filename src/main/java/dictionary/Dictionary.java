@@ -3,8 +3,6 @@ package dictionary;
 import dictionary.structure.DictionaryDataStructure;
 import dictionary.structure.InvertedIndex;
 import dictionary.termIndexer.KgramIndexer;
-import dictionary.termIndexer.PermutermIndexer;
-import dictionary.termIndexer.TrieTermIndexer;
 import dictionary.termIndexer.TermIndexer;
 import query.QueryHandler;
 import pattern.factory.DataStructureFactory;
@@ -17,7 +15,6 @@ import java.util.*;
 public class Dictionary implements Serializable {
 
     private DictionaryDataStructure dataStructure = new InvertedIndex();
-    private TermIndexer termIndexer = new KgramIndexer();
     private Indexer indexer = new Indexer();
 
     public Dictionary() {}
@@ -85,10 +82,7 @@ public class Dictionary implements Serializable {
     private void addTermsFromFile(File file) {
         int docID = indexer.addFile(file);
         TxtParser parser = new TxtParser(file);
-        List<String> terms = parser.getTerms();
-        termIndexer.addTerms(terms);
-        Normalizer normalizer = new Normalizer(terms);
-        dataStructure.addDocumentTerms(normalizer.getNormalizedWords(), docID);
+        dataStructure.addDocumentTerms(parser.getTerms(), docID);
     }
 
     private void serializeDirectory(String directory) throws IOException {
@@ -131,7 +125,7 @@ public class Dictionary implements Serializable {
     }
 
     private List<Integer> getDocIDs(String query) {
-        try { QueryHandler queryHandler = new QueryHandler(dataStructure, termIndexer, indexer);
+        try { QueryHandler queryHandler = new QueryHandler(dataStructure);
             return queryHandler.getDocIDs(query);
         } catch (NoSuchMethodException e) { throw new RuntimeException(e); }
     }

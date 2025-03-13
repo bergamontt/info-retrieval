@@ -18,7 +18,7 @@ public class Main {
 
         //he had been to Sibyl Vane
 
-        for (String document : dictionary.documentsFromQuery("d*ri*n"))
+        for (String document : dictionary.documentsFromQuery("*ian /1 g*"))
             System.out.println(document);
 //
 //        System.out.println();

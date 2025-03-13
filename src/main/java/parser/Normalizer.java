@@ -13,7 +13,7 @@ public class Normalizer {
         normalizedWords = normalize(words);
     }
 
-    public List<String> getNormalizedWords() {
+    public List<String> getNormalizedTerms() {
         return normalizedWords;
     }
 

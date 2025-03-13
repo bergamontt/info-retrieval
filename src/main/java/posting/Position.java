@@ -7,8 +7,8 @@ public class Position implements Comparable<Position>, Serializable {
     private int end;
 
     public Position(int start, int end) {
-        this.start = start;
-        this.end = end;
+        this.start = Math.min(start, end);
+        this.end = Math.max(start, end);
     }
 
     public Position(int start) {
@@ -16,11 +16,11 @@ public class Position implements Comparable<Position>, Serializable {
         this.end = start;
     }
 
-    public int subtract(Position p) {
-        int compare = this.compareTo(p);
+    public int subtract(Position that) {
+        int compare = this.compareTo(that);
         if (compare > 0)
-            return end - p.start;
-        return p.end - start;
+            return that.end - this.start;
+        return this.end - that.start;
     }
 
     public int getStart() {
@@ -51,7 +51,9 @@ public class Position implements Comparable<Position>, Serializable {
 
     @Override
     public int compareTo(Position that) {
-        return this.start - that.start;
+        if (this.end > that.start)
+            return this.end - that.start;
+        return this.start - that.end;
     }
 
     public String toString() {

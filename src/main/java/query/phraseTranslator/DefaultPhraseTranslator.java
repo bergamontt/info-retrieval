@@ -1,5 +1,6 @@
 package query.phraseTranslator;
 
+import utils.QueryUtils;
 import utils.StemmerUtils;
 
 public class DefaultPhraseTranslator extends PhraseTranslator {
@@ -10,6 +11,8 @@ public class DefaultPhraseTranslator extends PhraseTranslator {
         for (String token : tokens) {
             if (isOperand(token))
                 result.append(" ").append(token).append(" ");
+            else if (token.contains("*"))
+                result.append(token);
             else result.append(StemmerUtils.stem(token));
         }
         return result.toString();

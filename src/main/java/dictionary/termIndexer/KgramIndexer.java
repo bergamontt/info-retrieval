@@ -25,7 +25,8 @@ public class KgramIndexer implements TermIndexer {
 
     @Override
     public List<String> getTermsFromQuery(String query) {
-        String[] tokens = query.split("\\*");
+        query = query.toLowerCase();
+        String[] tokens = translateQuery(query).split("\\*");
         List<String> allKgrams = mergeTokensKgrams(tokens);
         Set<String> terms = new HashSet<>(kgrams.get(allKgrams.get(0)));
         for (int i = 1; i < allKgrams.size(); ++i) {
@@ -37,6 +38,14 @@ public class KgramIndexer implements TermIndexer {
             terms = intersected;
         }
         return TermIndexerFilter.filter(terms.stream().toList(), query);
+    }
+
+    public String translateQuery(String query) {
+        if (!query.startsWith("*"))
+            query = "$$" + query.toLowerCase();
+        if (!query.endsWith("*"))
+            query += "$$";
+        return query;
     }
 
     private List<String> mergeTokensKgrams(String[] tokens) {

@@ -30,11 +30,11 @@ public class PermutermIndexer implements TermIndexer {
     }
 
     private String translateQuery(String query) {
-        if (isComplex(query)) {
-            String[] parts = query.split("\\*");
-            query = parts[0] + "*" + parts[parts.length - 1];
-        }
-        return shiftAsterisk(query).replace("*", "");
+        query = query.toLowerCase();
+        String[] tokens = query.split("\\*");
+        String prefix = tokens[0];
+        String suffix = tokens.length == 2 ? tokens[1] : "";
+        return suffix + "$" + prefix;
     }
 
     private boolean isComplex(String query) {
@@ -47,6 +47,9 @@ public class PermutermIndexer implements TermIndexer {
     }
 
     private List<String> filterTerms(List<String> terms, String query) {
+        if (!query.startsWith("*")) {
+
+        }
         if (!isComplex(query)) return terms;
         return TermIndexerFilter.filter(terms.stream().toList(), query);
     }
