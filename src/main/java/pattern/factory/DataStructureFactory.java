@@ -15,7 +15,7 @@ public class DataStructureFactory {
             case "index" -> InvertedIndex.readFromFile(bufferedReader);
             case "biindex" -> Biword.readFromFile(bufferedReader);
             case "posindex" -> PositionalIndex.readFromFile(bufferedReader);
-            default -> throw new RuntimeException("Unknown dictionary type");
+            default -> throw new RuntimeException("Unknown posting type");
         };
     }
 

@@ -1,9 +1,8 @@
 package dictionary;
 
+import dictionary.docID.SimpleIndexer;
 import dictionary.structure.DictionaryDataStructure;
 import dictionary.structure.InvertedIndex;
-import dictionary.termIndexer.KgramIndexer;
-import dictionary.termIndexer.TermIndexer;
 import query.QueryHandler;
 import pattern.factory.DataStructureFactory;
 import parser.*;
@@ -15,7 +14,7 @@ import java.util.*;
 public class Dictionary implements Serializable {
 
     private DictionaryDataStructure dataStructure = new InvertedIndex();
-    private Indexer indexer = new Indexer();
+    private SimpleIndexer simpleIndexer = new SimpleIndexer();
 
     public Dictionary() {}
 
@@ -38,7 +37,7 @@ public class Dictionary implements Serializable {
         String normalizedTerm = StemmerUtils.stem(term);
         List<String> documents = new ArrayList<>();
         for (int docID : dataStructure.getDocIDsWithTerm(normalizedTerm)) {
-            File document = indexer.getDocumentByID(docID);
+            File document = simpleIndexer.getDocumentByID(docID);
             documents.add(document.getName());
         }
         return documents;
@@ -48,7 +47,7 @@ public class Dictionary implements Serializable {
         List<String> documents = new ArrayList<>();
         List<Integer> docIDs = getDocIDs(query);
         for (int docID : docIDs) {
-            File document = indexer.getDocumentByID(docID);
+            File document = simpleIndexer.getDocumentByID(docID);
             documents.add(document.getName());
         }
         return documents;
@@ -80,7 +79,7 @@ public class Dictionary implements Serializable {
     }
 
     private void addTermsFromFile(File file) {
-        int docID = indexer.addFile(file);
+        int docID = simpleIndexer.addFile(file);
         TxtParser parser = new TxtParser(file);
         dataStructure.addDocumentTerms(parser.getTerms(), docID);
     }
@@ -103,7 +102,7 @@ public class Dictionary implements Serializable {
     private void writeDictionaryToFile(String directory) throws IOException {
         FileWriter fileWriter = new FileWriter(directory);
         BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-        indexer.writeToFile(bufferedWriter);
+        simpleIndexer.writeToFile(bufferedWriter);
         dataStructure.writeToFile(bufferedWriter);
         bufferedWriter.close();
     }
@@ -112,7 +111,7 @@ public class Dictionary implements Serializable {
         Dictionary dictionary = new Dictionary();
         FileReader fileReader = new FileReader(directory);
         BufferedReader bufferedReader = new BufferedReader(fileReader);
-        dictionary.indexer = Indexer.loadFromFile(bufferedReader);
+        dictionary.simpleIndexer = SimpleIndexer.loadFromFile(bufferedReader);
         loadDataStructureFromFile(dictionary, bufferedReader);
         bufferedReader.close();
         return dictionary;

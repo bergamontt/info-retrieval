@@ -16,7 +16,7 @@ import java.util.*;
 public class PositionalIndex implements DictionaryDataStructure, BooleanRetrieval<List<PositionPosting>> {
 
     private final Map<String, List<PositionPosting>> positionPostings = new HashMap<>();
-    private final TermIndexer termIndexer = new KgramIndexer();
+    private final TermIndexer termIndexer = new PermutermIndexer();
     private int fileCount;
 
     @Override

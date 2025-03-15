@@ -1,6 +1,6 @@
 package query;
 
-import dictionary.Indexer;
+import dictionary.docID.SimpleIndexer;
 import parser.TxtParser;
 
 import java.io.File;
@@ -9,17 +9,17 @@ import java.util.List;
 
 public class DocumentFilter {
 
-    private final Indexer indexer;
+    private final SimpleIndexer simpleIndexer;
 
-    public DocumentFilter(Indexer indexer) {
-        this.indexer = indexer;
+    public DocumentFilter(SimpleIndexer simpleIndexer) {
+        this.simpleIndexer = simpleIndexer;
     }
 
     public List<Integer> filter(List<Integer> documents, String query) {
         List<Integer> filtered = new ArrayList<>();
         String[] queryTokens = clearQuery(query).split(" ");
         for (int docID : documents) {
-            File file = indexer.getDocumentByID(docID);
+            File file = simpleIndexer.getDocumentByID(docID);
             TxtParser parser = new TxtParser(file);
             List<String> terms = parser.getTerms();
             if (contains(queryTokens, terms))
