@@ -10,5 +10,6 @@ public interface DiskDictionaryDataStructure {
     List<Integer> getDocIDsWithTerm(String term);
     List<Integer> getDocIDsFromQuery(String query) throws NoSuchMethodException;
     void writeToFile(BufferedWriter bufferedWriter) throws IOException;
+    int uniqueWords();
 
 }

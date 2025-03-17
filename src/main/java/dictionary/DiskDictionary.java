@@ -7,6 +7,7 @@ import dictionary.structure.FrequencyIndex;
 import parser.TxtParser;
 import utils.FileLoader;
 import utils.StemmerUtils;
+import utils.StopWatch;
 
 import java.io.*;
 import java.util.*;
@@ -14,13 +15,18 @@ import java.util.*;
 public class DiskDictionary{
 
     private final static int MAX_BLOCK_SIZE = 50000000;
+
     private DiskIndexer indexer = new DiskIndexer();
     private DiskDictionaryDataStructure dataStructure
             = new DiskFrequencyIndex("src/main/java/indexed_collection/posting/posting.txt");
+    private long nonUniqueWords;
+    private long timeIndexing;
 
     public static DiskDictionary load(String path) throws IOException {
         DiskDictionary dictionary = new DiskDictionary();
         BufferedReader reader = new BufferedReader(new FileReader(path));
+        dictionary.nonUniqueWords = Long.parseLong(reader.readLine());
+        dictionary.timeIndexing = Long.parseLong(reader.readLine());
         dictionary.indexer = DiskIndexer.load(reader);
         dictionary.dataStructure = DiskFrequencyIndex.load(reader);
         reader.close();
@@ -28,12 +34,17 @@ public class DiskDictionary{
     }
 
     public void buildFromDirectory(String directory) throws IOException {
+        StopWatch stopWatch = new StopWatch();
         File directoryFile = FileLoader.loadFolder(directory);
-        indexDirectory(directoryFile);
+        //int blockCount = invertDirectoryInBlocks(directoryFile);
+        mergeBlocks();
+        timeIndexing = stopWatch.stop();
     }
 
     public void save(String path) throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(path));
+        writer.write(nonUniqueWords + "\n");
+        writer.write(timeIndexing + "\n");
         indexer.writeToFile(writer);
         dataStructure.writeToFile(writer);
         writer.close();
@@ -45,6 +56,18 @@ public class DiskDictionary{
         return docsFromDocIDs(docIDs);
     }
 
+    public long getNonUniqueWords() {
+        return nonUniqueWords;
+    }
+
+    public int getUniqueWords() {
+        return dataStructure.uniqueWords();
+    }
+
+    public String timeIndexing() {
+        return timeIndexing + "ms";
+    }
+
     private List<String> docsFromDocIDs(List<Integer> docIDs) {
         List<String> docPaths = new ArrayList<>();
         for (Integer docID : docIDs)
@@ -52,69 +75,37 @@ public class DiskDictionary{
         return docPaths;
     }
 
-    private void indexDirectory(File directoryFile) throws IOException {
-        int blockCount = invertDirectoryInBlocks(directoryFile);
-        mergeBlocks(blockCount);
-    }
+    private void mergeBlocks() throws IOException {
 
-    private void mergeBlocks(int blockCount) throws IOException {
-
-        PriorityQueue<TermData> pq = new PriorityQueue<>();
-        List<BufferedReader> blockReaders = new ArrayList<>(blockCount);
         File blocksDirectory = FileLoader.loadFolder("src/main/java/indexed_collection/blocks");
-
-        for (File file : Objects.requireNonNull(blocksDirectory.listFiles())) {
-            BufferedReader reader = new BufferedReader(new FileReader(file));
-            String line = reader.readLine();
-            if (line == null) continue;
-            String[] lineTokens = line.split(" ", 2);
-            if (lineTokens.length != 2) continue;
-            pq.offer(new TermData(lineTokens[0], lineTokens[1], blockReaders.size()));
-            blockReaders.add(reader);
-        }
+        BlockPQ pq = new BlockPQ(Objects.requireNonNull(blocksDirectory.listFiles()));
 
         System.out.println("Merging...");
-
-        String lastTerm = null;
-        StringBuilder lastData = new StringBuilder();
         RandomAccessFile raf = new RandomAccessFile("src/main/java/indexed_collection/posting/posting.txt", "rw");
 
-        while (!pq.isEmpty()) {
+        while (pq.isFull()) {
 
-            TermData termData = pq.poll();
-            String currTerm = termData.term;
-            String currData = termData.data;
-            int currIndex = termData.index;
+            String term = pq.peek().term;
+            List<Integer> posting = new ArrayList<>(pq.peek().posting);
+            pq.next();
 
-            if (!currTerm.equals(lastTerm)) {
-                if (lastTerm == null) {
-                    lastTerm = currTerm;
-                } else {
-                    long currPosition = raf.getFilePointer();
-                    raf.writeBytes(lastTerm + " " + lastData.toString() + "\r\n");
-                    dataStructure.addTerm(lastTerm, currPosition);
-                    lastTerm = currTerm;
-                    lastData.setLength(0);
-                }
+            while (pq.isFull() && term.equals(pq.peek().term)) {
+                posting.addAll(pq.peek().posting);
+                pq.next();
             }
 
-            lastData.append(currData);
-            BufferedReader blockReader = blockReaders.get(currIndex);
-            String line = blockReader.readLine();
-            if (line == null) {
-                blockReader.close();
-                continue;
-            }
+            long currPosition = raf.getFilePointer();
+            raf.writeBytes(term);
+            Collections.sort(posting);
+            for (int docID : posting)
+                raf.writeBytes(" " + docID);
+            raf.writeBytes("\n");
 
-            String[] tokens = line.split(" ", 2);
-            if (tokens.length == 2)
-                pq.add(new TermData(tokens[0], tokens[1], currIndex));
+            dataStructure.addTerm(term, currPosition);
+
         }
 
         raf.close();
-
-        for (BufferedReader blockReader : blockReaders)
-            blockReader.close();
 
     }
 
@@ -133,6 +124,7 @@ public class DiskDictionary{
             int docId = indexer.index(file);
             frequencyIndex.addDocumentTerms(terms, docId);
             currentBlockSize += terms.size();
+            nonUniqueWords += terms.size();
         }
         writeIndexToFile(frequencyIndex, blockCount);
         return blockCount;
@@ -149,14 +141,62 @@ public class DiskDictionary{
         bufferedWriter.close();
     }
 
-    private record TermData(String term, String data, int index) implements Comparable<TermData> {
+    private static class Block {
+        private BufferedReader reader;
+        private String term;
+        private List<Integer> posting;
 
-        @Override
-            public int compareTo(TermData o) {
-                if (!term.equals(o.term))
-                    return term.compareTo(o.term);
-                return index - o.index;
+        public Block(File file) {
+            try { reader = new BufferedReader(new FileReader(file));
+            } catch (FileNotFoundException ignored) {}
+            nextLine();
+        }
+
+        public boolean nextLine() {
+            try { return tryNextLine();
+            } catch (IOException ignored) {}
+            return false;
+        }
+
+        private boolean tryNextLine() throws IOException {
+            String line = reader.readLine();
+            if (line == null) {
+                reader.close();
+                return false;
+            }
+            String[] tokens = line.split(" ");
+            term = tokens[0];
+            posting = new ArrayList<>();
+            for (int i = 1; i < tokens.length; i++)
+                posting.add(Integer.parseInt(tokens[i]));
+            return true;
+        }
+    }
+
+    private static class BlockPQ {
+        private final PriorityQueue<Block> blocks = new PriorityQueue<>(
+                Comparator.comparing(o -> o.term));
+
+        public BlockPQ(File[] files) {
+            for (File file : files) {
+                blocks.add(new Block(file));
             }
         }
+
+        public boolean isFull() {
+            return !blocks.isEmpty();
+        }
+
+        public Block peek() {
+            return blocks.peek();
+        }
+
+        public void next() {
+            Block block = blocks.poll();
+            if (block == null) return;
+            if (block.nextLine())
+                blocks.add(block);
+        }
+    }
 
 }

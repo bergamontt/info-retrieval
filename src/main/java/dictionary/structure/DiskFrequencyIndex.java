@@ -47,6 +47,11 @@ public class DiskFrequencyIndex implements DiskDictionaryDataStructure{
             bufferedWriter.write(entry.getKey() + " " + entry.getValue() + "\n");
     }
 
+    @Override
+    public int uniqueWords() {
+        return terms.size();
+    }
+
     private String getPostingLine(long position) {
         File postingFile = new File(postingPath);
         try (RandomAccessFile raf = new RandomAccessFile(postingFile, "r")) {
