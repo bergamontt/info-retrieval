@@ -12,14 +12,37 @@ public class DiskFrequencyIndex implements DiskDictionaryDataStructure{
         this.postingPath = postingPath;
     }
 
-    public static DiskFrequencyIndex load(BufferedReader br) throws IOException {
-        DiskFrequencyIndex loadedIndex = new DiskFrequencyIndex(br.readLine());
-        int termsCount = Integer.parseInt(br.readLine());
-        for (int i = 0; i < termsCount; ++i) {
-            String[] tokens = br.readLine().split(" ");
-            loadedIndex.addTerm(tokens[0], Long.parseLong(tokens[1]));
+    public static DiskFrequencyIndex load(DataInputStream reader) throws IOException {
+        int pathLength = reader.readInt();
+        char[] pathBuffer = new char[pathLength];
+        for (int i = 0; i < pathLength; i++)
+            pathBuffer[i] = reader.readChar();
+        String path = new String(pathBuffer);
+        DiskFrequencyIndex index = new DiskFrequencyIndex(path);
+        int termCount = reader.readInt();
+        for (int i = 0; i < termCount; i++) {
+            int termLength = reader.readInt();
+            char[] buffer = new char[termLength];
+            for (int j = 0; j < termLength; j++)
+                buffer[j] = reader.readChar();
+            String term = new String(buffer);
+            long termPosition = reader.readLong();
+            index.terms.put(term, termPosition);
         }
-        return loadedIndex;
+        return index;
+    }
+
+    @Override
+    public void writeToFile(DataOutputStream writer) throws IOException {
+        writer.writeInt(postingPath.length());
+        writer.writeChars(postingPath);
+        writer.writeInt(terms.size());
+        for (Map.Entry<String, Long> entry : terms.entrySet()) {
+            String term = entry.getKey();
+            writer.writeInt(term.length());
+            writer.writeChars(term);
+            writer.writeLong(entry.getValue());
+        }
     }
 
     public void addTerm(String term, long position) {
@@ -29,9 +52,12 @@ public class DiskFrequencyIndex implements DiskDictionaryDataStructure{
     @Override
     public List<Integer> getDocIDsWithTerm(String term) {
         long position = terms.get(term);
-        String postingLine = getPostingLine(position);
-        if (postingLine == null) return new ArrayList<>();
-        return getPostingList(postingLine);
+        List<Integer> postings = getPostings(position);
+        return postings == null ? new ArrayList<>() : postings;
+    }
+
+    public Set<String> allTerms() {
+        return terms.keySet();
     }
 
     @Override
@@ -40,34 +66,21 @@ public class DiskFrequencyIndex implements DiskDictionaryDataStructure{
     }
 
     @Override
-    public void writeToFile(BufferedWriter bufferedWriter) throws IOException {
-        bufferedWriter.write(postingPath + "\n");
-        bufferedWriter.write(terms.size() + "\n");
-        for (Map.Entry<String, Long> entry : terms.entrySet())
-            bufferedWriter.write(entry.getKey() + " " + entry.getValue() + "\n");
-    }
-
-    @Override
     public int uniqueWords() {
         return terms.size();
     }
 
-    private String getPostingLine(long position) {
+    private List<Integer> getPostings(long position) {
         File postingFile = new File(postingPath);
         try (RandomAccessFile raf = new RandomAccessFile(postingFile, "r")) {
             raf.seek(position);
-            return raf.readLine();
+            List<Integer> posting = new ArrayList<>();
+            int postingSize = raf.readInt();
+            for (int i = 0; i < postingSize; ++i)
+                posting.add(raf.readInt());
+            return posting;
         } catch (IOException ignored) {}
         return null;
-    }
-
-    private List<Integer> getPostingList(String postingLine) {
-        String[] tokens = postingLine.split(" ");
-        List<Integer> postingList = new ArrayList<>();
-        for (String token : tokens)
-            if (!token.isEmpty())
-                postingList.add(Integer.parseInt(token));
-        return postingList;
     }
 
 }

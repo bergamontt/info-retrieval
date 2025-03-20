@@ -1,6 +1,8 @@
 package parser;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -23,7 +25,7 @@ public class TxtParser implements Parser {
     }
 
     private void parse(File file) throws IOException {
-        List<String> lines = readLines(file);
+        List<String> lines =readLines(file);
         for (String line : lines)
             parseLine(line);
     }

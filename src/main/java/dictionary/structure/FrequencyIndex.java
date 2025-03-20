@@ -2,13 +2,13 @@ package dictionary.structure;
 
 import parser.Normalizer;
 
-import java.io.BufferedWriter;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.*;
 
 public class FrequencyIndex {
 
-    private Map<String, List<Integer>> index = new TreeMap<>();
+    private final Map<String, List<Integer>> index = new TreeMap<>();
 
     public void addDocumentTerms(List<String> terms, int docID) {
         Normalizer normalizer = new Normalizer(terms);
@@ -20,12 +20,13 @@ public class FrequencyIndex {
         }
     }
 
-    public void writeToFile(BufferedWriter bufferedWriter) throws IOException {
-        for (Map.Entry<String, List<Integer>> entry : index.entrySet()) {
-            bufferedWriter.write(entry.getKey() + " ");
-            for (int docID : entry.getValue())
-                bufferedWriter.write(docID + " ");
-            bufferedWriter.newLine();
+    public void writeToFile(DataOutputStream writer) throws IOException {
+        for (String term : index.keySet()) {
+            writer.writeInt(term.length());
+            writer.writeChars(term);
+            writer.writeInt(index.get(term).size());
+            for (int docID : index.get(term))
+                writer.writeInt(docID);
         }
     }
 
