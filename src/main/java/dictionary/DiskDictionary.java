@@ -2,6 +2,7 @@ package dictionary;
 
 import dictionary.docID.DiskIndexer;
 import dictionary.structure.DiskDictionaryDataStructure;
+import dictionary.structure.DiskEncodedFrequencyIndex;
 import dictionary.structure.DiskFrequencyIndex;
 import dictionary.structure.FrequencyIndex;
 import dictionary.threads.IndexingThread;
@@ -9,28 +10,28 @@ import parser.TxtParser;
 import utils.FileLoader;
 import utils.StemmerUtils;
 import utils.StopWatch;
+import utils.VBE;
 
 import java.io.*;
 import java.util.*;
 
 public class DiskDictionary{
 
-    private final static int MAX_BLOCK_SIZE = 10000000;
     private final static int INDEXING_THREADS = 16;
+    private final static String postingPath = "src/main/java/indexed_collection/posting/posting.txt";
+    private final static String blocksPath = "src/main/java/indexed_collection/blocks";
 
     private DiskIndexer indexer = new DiskIndexer();
     private DiskDictionaryDataStructure dataStructure
-            = new DiskFrequencyIndex("src/main/java/indexed_collection/posting/posting.txt");
+            = new DiskEncodedFrequencyIndex(postingPath);
     private long nonUniqueWords;
     private long timeIndexing;
 
     public static DiskDictionary load(String path) throws IOException {
         DiskDictionary dictionary = new DiskDictionary();
         DataInputStream reader = new DataInputStream(new BufferedInputStream(new FileInputStream(path)));
-        dictionary.nonUniqueWords = reader.readLong();
-        dictionary.timeIndexing = reader.readLong();
         dictionary.indexer = DiskIndexer.load(reader);
-        dictionary.dataStructure = DiskFrequencyIndex.load(reader);
+        dictionary.dataStructure = DiskEncodedFrequencyIndex.load(reader);
         reader.close();
         return dictionary;
     }
@@ -39,15 +40,12 @@ public class DiskDictionary{
         StopWatch stopWatch = new StopWatch();
         File directoryFile = FileLoader.loadFolder(directory);
         runIndexingThreads(directoryFile);
-//        invertDirectoryInBlocks(directoryFile);
         mergeBlocks();
         timeIndexing = stopWatch.stop();
     }
 
     public void save(String path) throws IOException {
         DataOutputStream writer = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(path)));
-        writer.writeLong(nonUniqueWords);
-        writer.writeLong(timeIndexing);
         indexer.writeToFile(writer);
         dataStructure.writeToFile(writer);
         writer.close();
@@ -89,7 +87,7 @@ public class DiskDictionary{
                 for (int j = 0; j < filesPerThread; j++)
                     threadFiles.add(directoryFiles.remove(0));
             }
-            threads[i] = new Thread(new IndexingThread(indexer, threadFiles, i, i * filesPerThread));
+            threads[i] = new Thread(new IndexingThread(indexer, threadFiles, i, i * (filesPerThread + 1)));
             threads[i].start();
         }
         for (Thread thread : threads) {
@@ -108,12 +106,13 @@ public class DiskDictionary{
 
     private void mergeBlocks() throws IOException {
 
-        File blocksDirectory = FileLoader.loadFolder("src/main/java/indexed_collection/blocks");
+        File blocksDirectory = FileLoader.loadFolder(blocksPath);
         BlockPQ pq = new BlockPQ(Objects.requireNonNull(blocksDirectory.listFiles()));
+        Map<String, Integer> terms = new HashMap<>();
 
         System.out.println("Merging...");
 
-        DataOutputStream writer = new DataOutputStream(new BufferedOutputStream(new FileOutputStream("src/main/java/indexed_collection/posting/posting.txt")));
+        DataOutputStream writer = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(postingPath)));
         int currPosition = 0;
 
         while (pq.isFull()) {
@@ -126,69 +125,29 @@ public class DiskDictionary{
                 pq.next();
             }
 
-            writer.writeInt(posting.size());
             Collections.sort(posting);
-            for (int docID : posting)
-                writer.writeInt(docID);
-            dataStructure.addTerm(term, currPosition);
-            currPosition += Integer.BYTES * (posting.size() + 1);
+            intervalPosting(posting);
+            byte[] encoded = VBE.encode(posting);
+
+            writer.writeInt(encoded.length);
+            writer.write(encoded);
+
+            terms.put(term, currPosition);
+            currPosition += Integer.BYTES + encoded.length;
         }
+        dataStructure.addTerms(terms);
         writer.close();
     }
 
-//    private List<Integer> appendSorted(List<Integer> posting1, List<Integer> posting2) {
-//        List<Integer> result = new ArrayList<>();
-//        int p1 = 0, p2 = 0;
-//        while (p1 < posting1.size() || p2 < posting2.size()) {
-//            if (p1 >= posting1.size()) {
-//                result.add(posting2.get(p2++));
-//            } else if (p2 >= posting2.size()) {
-//                result.add(posting1.get(p1++));
-//            } else {
-//                int val1 = posting1.get(p1);
-//                int val2 = posting2.get(p2);
-//                if (val1 == val2) {
-//                    result.add(posting1.get(p1++));
-//                    p2++;
-//                } else if (val1 > val2) {
-//                    result.add(posting2.get(p2++));
-//                } else result.add(posting1.get(p1++));
-//            }
-//        }
-//        return result;
-//    }
-
-//    private void invertDirectoryInBlocks(File directoryFile) throws IOException {
-//        int blockCount = 0;
-//        int currentBlockSize = 0;
-//        FrequencyIndex frequencyIndex = new FrequencyIndex();
-//        for (File file : Objects.requireNonNull(directoryFile.listFiles())) {
-//            TxtParser txtParser = new TxtParser(file);
-//            List<String> terms = txtParser.getTerms();
-//            if (blockIsFull(currentBlockSize, terms.size())) {
-//                writeIndexToFile(frequencyIndex, blockCount++);
-//                frequencyIndex = new FrequencyIndex();
-//                currentBlockSize = 0;
-//            }
-//            int docId = indexer.index(file);
-//            frequencyIndex.addDocumentTerms(terms, docId);
-//            currentBlockSize += terms.size();
-//            nonUniqueWords += terms.size();
-//        }
-//        writeIndexToFile(frequencyIndex, blockCount);
-//    }
-//
-//    private boolean blockIsFull(int currentBlockSize, int termsCount) {
-//        return currentBlockSize + termsCount > MAX_BLOCK_SIZE;
-//    }
-//
-//    private void writeIndexToFile(FrequencyIndex frequencyIndex, int blockNumber) throws IOException {
-//        DataOutputStream writer = new DataOutputStream(
-//                new BufferedOutputStream(new FileOutputStream("src/main/java/indexed_collection/blocks/"+ blockNumber + ".txt")));
-//        frequencyIndex.writeToFile(writer);
-//        System.out.println("read block: " + blockNumber);
-//        writer.close();
-//    }
+    private void intervalPosting(List<Integer> posting) {
+        if (posting.isEmpty()) return;
+        int prev = posting.get(0);
+        for (int i = 1; i < posting.size(); ++i) {
+            int current = posting.get(i);
+            posting.set(i, current - prev);
+            prev = current;
+        }
+    }
 
     private static class Block {
         private DataInputStream reader;

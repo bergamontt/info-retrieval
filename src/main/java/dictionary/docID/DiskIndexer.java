@@ -1,8 +1,7 @@
 package dictionary.docID;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DiskIndexer {
@@ -12,6 +11,8 @@ public class DiskIndexer {
     public static DiskIndexer load(DataInputStream reader) throws IOException {
         DiskIndexer indexer = new DiskIndexer();
         int docIDCount = reader.readInt();
+        int k = 0;
+        System.out.println("DOCIDS READ:  " + docIDCount);
         for (int i = 0; i < docIDCount; i++) {
             int docID = reader.readInt();
             int fileLength = reader.readInt();
@@ -19,8 +20,29 @@ public class DiskIndexer {
             for (int j = 0; j < fileLength; j++)
                 buffer[j] = reader.readChar();
             indexer.docIDs.put(docID, new String(buffer));
+            k++;
         }
+        System.out.println("DOCIDS SAVED:  " + k);
         return indexer;
+    }
+
+    public void writeToFile(DataOutputStream writer) throws IOException {
+//        System.out.println("DOCIDS: " + docIDs.size());
+//        writer.writeInt(docIDs.size());
+        int i = 0;
+        for (Map.Entry<Integer, String> entry : docIDs.entrySet())
+            i++;
+        System.out.println("DOCIDS: " + i);
+        writer.writeInt(i);
+        int j = 0;
+        for (Map.Entry<Integer, String> entry : docIDs.entrySet()) {
+            writer.writeInt(entry.getKey());
+            String docPath = entry.getValue();
+            writer.writeInt(docPath.length());
+            writer.writeChars(docPath);
+            j++;
+        }
+        System.out.println("WRITTEN IDS: " + j);
     }
 
     public int index(File file) {
@@ -29,23 +51,11 @@ public class DiskIndexer {
     }
 
     public void index(File file, int docID) {
-        if (docIDs.containsKey(docID))
-            System.out.println("hell yeah");
         docIDs.put(docID, file.getAbsolutePath());
     }
 
     public String getDocByID(int docID) {
         return docIDs.get(docID);
-    }
-
-    public void writeToFile(DataOutputStream writer) throws IOException {
-        writer.writeInt(docIDs.size());
-        for (Map.Entry<Integer, String> entry : docIDs.entrySet()) {
-            writer.writeInt(entry.getKey());
-            String value = entry.getValue();
-            writer.writeInt(value.length());
-            writer.writeChars(value);
-        }
     }
 
 }
