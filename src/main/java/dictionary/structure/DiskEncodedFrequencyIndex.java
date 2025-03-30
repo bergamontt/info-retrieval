@@ -19,8 +19,6 @@ public class DiskEncodedFrequencyIndex implements DiskDictionaryDataStructure{
     }
 
     public static DiskEncodedFrequencyIndex load(DataInputStream reader) throws IOException {
-//        System.out.println(reader.readInt());
-
         int pp = reader.readInt();
         char[] pathBuffer = new char[pp];
         for (int i = 0; i < pp; i++)

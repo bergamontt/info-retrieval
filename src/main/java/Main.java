@@ -30,7 +30,6 @@ public class Main {
         System.out.println(stopWatch.stop() + "ms");
 
         System.out.println(dictionary.getUniqueWords());
-        System.out.println(dictionary.getNonUniqueWords());
 
     }
 

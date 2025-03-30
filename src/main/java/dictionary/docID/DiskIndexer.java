@@ -27,8 +27,6 @@ public class DiskIndexer {
     }
 
     public void writeToFile(DataOutputStream writer) throws IOException {
-//        System.out.println("DOCIDS: " + docIDs.size());
-//        writer.writeInt(docIDs.size());
         int i = 0;
         for (Map.Entry<Integer, String> entry : docIDs.entrySet())
             i++;
@@ -56,6 +54,13 @@ public class DiskIndexer {
 
     public String getDocByID(int docID) {
         return docIDs.get(docID);
+    }
+
+    public List<String> docsFromDocIDs(List<Integer> docIDs) {
+        List<String> docPaths = new ArrayList<>();
+        for (Integer docID : docIDs)
+            docPaths.add(getDocByID(docID));
+        return docPaths;
     }
 
 }
