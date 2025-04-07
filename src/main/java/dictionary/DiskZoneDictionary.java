@@ -20,7 +20,7 @@ public class DiskZoneDictionary{
     private final static int MAX_RETURNED_DOCS = 10;
 
     private DiskIndexer indexer = new DiskIndexer();
-    private ZonedDictionaryDataStructure dataStructure
+    private DiskEncodedZonedFrequencyIndex dataStructure
             = new DiskEncodedZonedFrequencyIndex(postingPath);
 
     public static DiskZoneDictionary load(String path) throws IOException {
@@ -50,6 +50,12 @@ public class DiskZoneDictionary{
     public List<String> getDocsWithTerm(String term) {
         String normalized = StemmerUtils.stem(term);
         List<ZonedPosting> docIDs = dataStructure.getDocIDsWithTerm(normalized);
+        List<Integer> bestDocIDs = getBestDocIDs(docIDs);
+        return indexer.docsFromDocIDs(bestDocIDs);
+    }
+
+    public List<String> getDocsByBooleanQuery(String query) throws NoSuchMethodException {
+        List<ZonedPosting> docIDs = dataStructure.getDocIDsFromQuery(query);
         List<Integer> bestDocIDs = getBestDocIDs(docIDs);
         return indexer.docsFromDocIDs(bestDocIDs);
     }

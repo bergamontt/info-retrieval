@@ -1,12 +1,18 @@
 package dictionary.structure;
 
+import operators.BooleanOperators;
+import operators.BooleanRetrieval;
+import operators.ZonedPostingBooleanOperators;
+import posting.PositionPosting;
 import posting.ZonedPosting;
+import query.QueryEngine;
+import query.phraseTranslator.DefaultPhraseTranslator;
 import utils.VBE;
 
 import java.io.*;
 import java.util.*;
 
-public class DiskEncodedZonedFrequencyIndex implements ZonedDictionaryDataStructure{
+public class DiskEncodedZonedFrequencyIndex implements ZonedDictionaryDataStructure, BooleanRetrieval<List<ZonedPosting>> {
 
     private static int MAX_BLOCK_SIZE = 4;
     private final StringBuilder terms = new StringBuilder();
@@ -58,7 +64,9 @@ public class DiskEncodedZonedFrequencyIndex implements ZonedDictionaryDataStruct
     }
 
     @Override
-    public void addTerm(String term, long position) {}
+    public void addTerm(String term, long position) {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public void addTerms(Map<String, Integer> terms) {
@@ -99,7 +107,7 @@ public class DiskEncodedZonedFrequencyIndex implements ZonedDictionaryDataStruct
 
     @Override
     public Set<String> allTerms() {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -167,12 +175,15 @@ public class DiskEncodedZonedFrequencyIndex implements ZonedDictionaryDataStruct
 
     @Override
     public List<ZonedPosting> getDocIDsFromQuery(String query) throws NoSuchMethodException {
-        return List.of();
+        DefaultPhraseTranslator translator = new DefaultPhraseTranslator();
+        String translatedQuery = translator.translate(query);
+        QueryEngine<List<ZonedPosting> > queryEngine = new QueryEngine<>(this, null);
+        return queryEngine.getDocIDsFromQuery(translatedQuery);
     }
 
     @Override
     public int uniqueWords() {
-        return 0;
+        throw new UnsupportedOperationException();
     }
 
     private String longestCommonPrefix(String term1, String term2) {
@@ -209,4 +220,15 @@ public class DiskEncodedZonedFrequencyIndex implements ZonedDictionaryDataStruct
         }
 
     }
+
+    @Override
+    public BooleanOperators<List<ZonedPosting>> getBooleanOperators() {
+        return new ZonedPostingBooleanOperators(0);
+    }
+
+    @Override
+    public List<ZonedPosting> getTermRawDocIDs(String token) {
+        return getDocIDsWithTerm(token);
+    }
+
 }
