@@ -1,11 +1,12 @@
 package dictionary.structure;
 
+import posting.ZonedPosting;
 import utils.VBE;
 
 import java.io.*;
 import java.util.*;
 
-public class DiskEncodedFrequencyIndex implements DiskDictionaryDataStructure{
+public class DiskEncodedZonedFrequencyIndex implements ZonedDictionaryDataStructure{
 
     private static int MAX_BLOCK_SIZE = 4;
     private final StringBuilder terms = new StringBuilder();
@@ -14,16 +15,16 @@ public class DiskEncodedFrequencyIndex implements DiskDictionaryDataStructure{
 
     private final String postingPath;
 
-    public DiskEncodedFrequencyIndex(String postingPath) {
+    public DiskEncodedZonedFrequencyIndex(String postingPath) {
         this.postingPath = postingPath;
     }
 
-    public static DiskEncodedFrequencyIndex load(DataInputStream reader) throws IOException {
+    public static DiskEncodedZonedFrequencyIndex load(DataInputStream reader) throws IOException {
         int pp = reader.readInt();
         char[] pathBuffer = new char[pp];
         for (int i = 0; i < pp; i++)
             pathBuffer[i] = reader.readChar();
-        DiskEncodedFrequencyIndex index = new DiskEncodedFrequencyIndex(new String(pathBuffer));
+        DiskEncodedZonedFrequencyIndex index = new DiskEncodedZonedFrequencyIndex(new String(pathBuffer));
 
         MAX_BLOCK_SIZE = reader.readInt();
         int postingLength = reader.readInt();
@@ -102,7 +103,7 @@ public class DiskEncodedFrequencyIndex implements DiskDictionaryDataStructure{
     }
 
     @Override
-    public List<Integer> getDocIDsWithTerm(String term) {
+    public List<ZonedPosting> getDocIDsWithTerm(String term) {
         int postingPosition = getPostingPosition(term);
         if (postingPosition == -1) return new ArrayList<>();
         return getPostings(postingPosition);
@@ -165,7 +166,7 @@ public class DiskEncodedFrequencyIndex implements DiskDictionaryDataStructure{
     }
 
     @Override
-    public List<Integer> getDocIDsFromQuery(String query) throws NoSuchMethodException {
+    public List<ZonedPosting> getDocIDsFromQuery(String query) throws NoSuchMethodException {
         return List.of();
     }
 
@@ -185,27 +186,27 @@ public class DiskEncodedFrequencyIndex implements DiskDictionaryDataStructure{
         return sb.toString();
     }
 
-    private List<Integer> getPostings(long position) {
+    private List<ZonedPosting> getPostings(long position) {
         try (DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(postingPath)))) {
             dis.skipBytes((int)position);
             int postingSize = dis.readInt();
             byte[] buffer = new byte[postingSize];
             dis.readFully(buffer);
-            List<Integer> result = VBE.decode(buffer);
+            List<ZonedPosting> result = VBE.decodeZoned(buffer);
             toDocIDs(result);
             return result;
         } catch (IOException ignored) {}
         return null;
     }
 
-    private void toDocIDs(List<Integer> posting) {
+    private void toDocIDs(List<ZonedPosting> posting) {
         if (posting.isEmpty()) return;
-        int previous = posting.get(0);
-        for (int i = 1; i < posting.size(); i++) {
-            int current = posting.get(i);
-            posting.set(i, previous + current);
-            previous = previous + current;
+        ZonedPosting prev = posting.get(0);
+        for (int i = 1; i < posting.size(); ++i) {
+            ZonedPosting curr = posting.get(i);
+            posting.set(i, new ZonedPosting(prev.getDocID() + curr.getDocID(), curr.getZones()));
+            prev = posting.get(i);
         }
-    }
 
+    }
 }

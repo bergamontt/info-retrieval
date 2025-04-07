@@ -1,6 +1,7 @@
 import dictionary.Dictionary;
 
 import dictionary.DiskDictionary;
+import dictionary.DiskZoneDictionary;
 import utils.StopWatch;
 
 import java.io.IOException;
@@ -12,24 +13,22 @@ public class Main {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        //DiskDictionary dictionary = DiskDictionary.load("src/main/java/indexed_collection/dict/dict.txt");
+        //DiskZoneDictionary dictionary = DiskZoneDictionary.load("src/main/java/indexed_collection/dict/dict.txt");
 
-        DiskDictionary dictionary = new DiskDictionary();
+        DiskZoneDictionary dictionary = new DiskZoneDictionary();
         dictionary.buildFromDirectory("D:/info/books/books");
 
         System.out.println("saving");
 
-        dictionary.save("src/main/java/indexed_collection/dict/dict.txt");
-
-       for (String word: dictionary.getDocsWithTerm("a"))
+       for (String word: dictionary.getDocsWithTerm("mississippi"))
            System.out.println(word);
 
 //        for (String term : dictionary.allTerms())
 //            System.out.println(term);
 
-        System.out.println(stopWatch.stop() + "ms");
+        dictionary.save("src/main/java/indexed_collection/dict/dict.txt");
 
-        System.out.println(dictionary.getUniqueWords());
+        System.out.println(stopWatch.stop() + "ms");
 
     }
 

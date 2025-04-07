@@ -1,14 +1,14 @@
 package dictionary.threads;
 
+import constants.Zone;
 import dictionary.docID.DiskIndexer;
-import dictionary.structure.FrequencyIndex;
-import parser.TxtParser;
+import dictionary.structure.ZonedFrequencyIndex;
+import parser.ZonedTxtParser;
 
 import java.io.*;
 import java.util.List;
-import java.util.Objects;
 
-public class IndexingThread implements Runnable {
+public class ZonedIndexingThread implements Runnable {
 
     private final static int MAX_BLOCK_SIZE = 10000000;
 
@@ -17,7 +17,7 @@ public class IndexingThread implements Runnable {
     private final int threadID;
     private int freeID;
 
-    public IndexingThread(DiskIndexer indexer, List<File> indexingFiles, int threadID, int freeID) {
+    public ZonedIndexingThread(DiskIndexer indexer, List<File> indexingFiles, int threadID, int freeID) {
         this.indexingFiles = indexingFiles;
         this.indexer = indexer;
         this.threadID = threadID;
@@ -35,18 +35,20 @@ public class IndexingThread implements Runnable {
     private void invertDirectoryInBlocks() throws IOException {
         int blockCount = 0;
         int currentBlockSize = 0;
-        FrequencyIndex frequencyIndex = new FrequencyIndex();
+        ZonedFrequencyIndex frequencyIndex = new ZonedFrequencyIndex();
         for (File file : indexingFiles) {
-            TxtParser txtParser = new TxtParser(file);
-            List<String> terms = txtParser.getTerms();
-            if (blockIsFull(currentBlockSize, terms.size())) {
+            ZonedTxtParser parser = new ZonedTxtParser(file);
+            if (blockIsFull(currentBlockSize, parser.size())) {
                 writeIndexToFile(frequencyIndex, blockCount++);
-                frequencyIndex = new FrequencyIndex();
+                frequencyIndex = new ZonedFrequencyIndex();
                 currentBlockSize = 0;
             }
             indexer.index(file, freeID);
-            frequencyIndex.addDocumentTerms(terms, freeID++);
-            currentBlockSize += terms.size();
+            frequencyIndex.addDocumentTerms(parser.getTitle(), freeID, Zone.TITLE);
+            frequencyIndex.addDocumentTerms(parser.getAuthor(), freeID, Zone.AUTHOR);
+            frequencyIndex.addDocumentTerms(parser.getBody(), freeID, Zone.BODY);
+            currentBlockSize += parser.size();
+            freeID++;
         }
         writeIndexToFile(frequencyIndex, blockCount);
     }
@@ -55,11 +57,12 @@ public class IndexingThread implements Runnable {
         return currentBlockSize + termsCount > MAX_BLOCK_SIZE;
     }
 
-    private void writeIndexToFile(FrequencyIndex frequencyIndex, int blockNumber) throws IOException {
+    private void writeIndexToFile(ZonedFrequencyIndex frequencyIndex, int blockNumber) throws IOException {
         DataOutputStream writer = new DataOutputStream(
                 new BufferedOutputStream(new FileOutputStream("src/main/java/indexed_collection/blocks/" + threadID + '-' + blockNumber + ".txt")));
         frequencyIndex.writeToFile(writer);
-        System.out.println("read block: " + blockNumber);
+        System.out.println("read blocks: " + blockNumber);
         writer.close();
     }
+
 }

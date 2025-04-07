@@ -1,18 +1,18 @@
-package dictionary.disk;
+package dictionary.disk.zoned;
 
 import dictionary.docID.DiskIndexer;
-import dictionary.threads.BasicIndexingThread;
+import dictionary.threads.ZonedIndexingThread;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class IndexingThreadDelegator {
+public class ZonedIndexingThreadDelegator {
 
     private final static int INDEXING_THREADS = 16;
     private final DiskIndexer indexer;
 
-    public IndexingThreadDelegator(DiskIndexer indexer) {
+    public ZonedIndexingThreadDelegator(DiskIndexer indexer) {
         this.indexer = indexer;
     }
 
@@ -33,7 +33,7 @@ public class IndexingThreadDelegator {
                 }
             }
             int currFreeID = i * (filesPerThread + 1);
-            BasicIndexingThread currThread =  new BasicIndexingThread(indexer, threadFiles, i, currFreeID);
+            ZonedIndexingThread currThread =  new ZonedIndexingThread(indexer, threadFiles, i, currFreeID);
             threads[i] = new Thread(currThread);
             threads[i].start();
         }
