@@ -6,13 +6,10 @@ import java.io.IOException;
 import java.util.*;
 
 public class DocIndexer {
-    private final Map<String, VectorPosition> documents = new HashMap<>();
+    private final Map<String, Integer> documents = new HashMap<>();
 
-    public void addDocument(String document, int position, int blockID) {
-        VectorPosition vectorPosition = new VectorPosition();
-        vectorPosition.setVectorPosition(position);
-        vectorPosition.setBlockID(blockID);
-        documents.put(document, vectorPosition);
+    public void addDocument(String document, int position) {
+        documents.put(document, position);
     }
 
     public List<String> getNRandomDocuments(int n) {
@@ -30,9 +27,8 @@ public class DocIndexer {
             for (int j = 0; j < docLength; j++)
                 buffer[j] = reader.readChar();
             String document = new String(buffer);
-            int blockID = reader.readInt();
             int position = reader.readInt();
-            indexer.addDocument(document, position, blockID);
+            indexer.addDocument(document, position);
         }
         return indexer;
     }
@@ -42,9 +38,7 @@ public class DocIndexer {
         for (String document : documents.keySet()) {
             writer.writeInt(document.length());
             writer.writeChars(document);
-            VectorPosition vectorPosition = documents.get(document);
-            writer.writeInt(vectorPosition.getBlockID());
-            writer.writeInt(vectorPosition.getVectorPosition());
+            writer.writeInt(documents.get(document));
         }
     }
 
@@ -52,7 +46,7 @@ public class DocIndexer {
         return documents.keySet();
     }
 
-    public VectorPosition getVectorPosition(String document) {
+    public Integer getVectorPosition(String document) {
         return documents.get(document);
     }
 

@@ -1,35 +1,26 @@
 package dictionary.cluster;
 
-import dictionary.cluster.threads.ClusterThreadDelegator;
-
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class Cluster {
-    private final BlockIndexer blockIndexer;
     private final DocIndexer docIndexer;
-    private final Map<String, List<String>> clusters;
+    private final Map<String, List<String>> clusters = new HashMap<>();
 
-    public Cluster(
-            BlockIndexer blockIndexer,
-            DocIndexer docIndexer
-    ) {
-        this.blockIndexer = blockIndexer;
+    public Cluster(DocIndexer docIndexer) {
         this.docIndexer = docIndexer;
-        this.clusters = new HashMap<>();
     }
 
     public void buildCluster() {
         List<String> leaders = findLeaders();
-        //calculateKNNForEachDocument(leaders);
-        ClusterThreadDelegator delegator = new ClusterThreadDelegator(docIndexer, blockIndexer, clusters, leaders);
-        ArrayList<String> allDocuments = new ArrayList<>(docIndexer.getAllDocuments());
-        delegator.runDelegatingThreads(allDocuments);
+        calculateKNNForEachDocument(leaders);
     }
 
     public List<String> findTenSimilarDocs(SparseVector vector) {
-        List<String> leaders = clusters.keySet().stream().toList();
+        List<String> leaders = new ArrayList<>(clusters.keySet());
         String closestLeader = findClosestLeader(vector, leaders);
         return findTenSimilarDocsWithLeader(vector, closestLeader);
     }
@@ -48,8 +39,8 @@ public class Cluster {
         }
     }
 
-    public static Cluster load(DataInputStream reader, BlockIndexer blockIndexer, DocIndexer docIndexer) throws IOException {
-        Cluster cluster = new Cluster(blockIndexer, docIndexer);
+    public static Cluster load(DataInputStream reader, DocIndexer docIndexer) throws IOException {
+        Cluster cluster = new Cluster(docIndexer);
         int clustersCount = reader.readInt();
         for (int i = 0; i < clustersCount; i++) {
             int leaderLength = reader.readInt();
@@ -79,16 +70,14 @@ public class Cluster {
     }
 
     private void calculateKNNForEachDocument(List<String> leaders) {
-        int docCount = docIndexer.getDocumentCount();
-        int calculated = 0;
         for (String document : docIndexer.getAllDocuments()) {
-            SparseVector docVector = getSparseVector(document);
+            SparseVectorReader reader = new SparseVectorReader(docIndexer);
+            SparseVector docVector = reader.readSparseVector(document);
             if (docVector == null) continue;
             String closestLeader = findClosestLeader(docVector, leaders);
             List<String> cluster = clusters.getOrDefault(closestLeader, new ArrayList<>());
             cluster.add(document);
             clusters.put(closestLeader, cluster);
-            System.out.println(++calculated + ":  " + docCount);
         }
     }
 
@@ -96,7 +85,8 @@ public class Cluster {
         String closestLeader = leaders.get(0);
         double similarity = Double.MIN_VALUE;
         for (String leader : leaders) {
-            SparseVector leaderVector = getSparseVector(leader);
+            SparseVectorReader reader = new SparseVectorReader(docIndexer);
+            SparseVector leaderVector = reader.readSparseVector(leader);
             if (leaderVector == null) continue;
             double currSimilarity =  vector.cosineSimilarity(leaderVector);
             if (currSimilarity > similarity) {
@@ -107,33 +97,11 @@ public class Cluster {
         return closestLeader;
     }
 
-    private SparseVector getSparseVector(String document) {
-        VectorPosition currVectorPosition = docIndexer.getVectorPosition(document);
-        int blockID = currVectorPosition.getBlockID();
-        int vectorPosition = currVectorPosition.getVectorPosition();
-        String documentPath = blockIndexer.getBlockPath(blockID);
-        return readSparseVector(documentPath, vectorPosition);
-    }
-
-    private SparseVector readSparseVector(String documentPath, int position) {
-        try (DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(documentPath)))) {
-            dis.skipBytes(position);
-            int vectorSize = dis.readInt();
-            SparseVector vector = new SparseVector();
-            for (int i = 0; i < vectorSize; i++) {
-                int index = dis.readInt();
-                float value = dis.readFloat();
-                vector.put(index, value);
-            }
-            return vector;
-        } catch (IOException ignored)
-        {return null;}
-    }
-
     private List<String> findTenSimilarDocsWithLeader(SparseVector vector, String closestLeader) {
         TreeMap<String, Double> followersCosine = new TreeMap<>();
         for (String follower : clusters.get(closestLeader)) {
-            SparseVector followerVector = getSparseVector(follower);
+            SparseVectorReader reader = new SparseVectorReader(docIndexer);
+            SparseVector followerVector = reader.readSparseVector(follower);
             double score = vector.cosineSimilarity(followerVector);
             followersCosine.put(follower, score);
         }

@@ -3,9 +3,7 @@ package dictionary.cluster;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class TermIndexer {
@@ -37,13 +35,14 @@ public class TermIndexer {
     }
 
     public void addTerm(String term) {
-        if (!termIDs.containsKey(term))
-            termIDs.computeIfAbsent(term, k -> termIDs.size() + 1);
+        termIDs.computeIfAbsent(term, k -> termIDs.size() + 1);
     }
 
     public SparseVector buildVectorFromTerms(List<String> terms) {
         SparseVector vector = new SparseVector();
         for (String term : terms) {
+            if (!termIDs.containsKey(term))
+                continue;
             int termID = termIDs.get(term);
             vector.put(termID, 1.0f);
         }

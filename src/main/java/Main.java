@@ -12,16 +12,17 @@ public class Main {
         stopWatch.start();
 
         String savedDictionary = "src/main/java/indexed_collection/dict/dict.txt";
+        String bigDictionary = "D:\\info2\\books\\books";
 
-        //ClusterDictionary clusterDictionary = ClusterDictionary.loadFromFile(savedDictionary);
+        ClusterDictionary clusterDictionary = ClusterDictionary.load(savedDictionary);
 
-        ClusterDictionary clusterDictionary = new ClusterDictionary();
-        clusterDictionary.buildFromDirectory("D:\\info2\\books\\books");
+        //ClusterDictionary clusterDictionary = new ClusterDictionary();
+        //clusterDictionary.buildFromDirectory("src/main/java/collection");
 
-        for (String docs : clusterDictionary.getTenSimilarDocsFromQuery("mississippi"))
+        for (String docs : clusterDictionary.getTopTenSimilarDocuments("god heaven bible"))
             System.out.println(docs);
 
-        clusterDictionary.writeToFile(savedDictionary);
+        //clusterDictionary.writeToFile(savedDictionary);
 
         System.out.println(stopWatch.stop() + "ms");
 
